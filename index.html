@@ -104,6 +104,25 @@
                 width: 200px;
             }
         }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-500 to-purple-600 min-h-screen font-poppins">
@@ -445,12 +464,45 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-dark mb-2 flex items-center gap-2">
+                                    <i data-lucide="list" class="icon text-gray-500"></i>
+                                    Tipe Tugas
+                                </label>
+                                <select id="assignment-type" required
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                                    <option value="essay">Uraian/Essay</option>
+                                    <option value="multiple_choice">Pilihan Ganda</option>
+                                    <option value="file_upload">Mengumpulkan File</option>
+                                    <option value="short_answer">Jawaban Singkat</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-dark mb-2 flex items-center gap-2">
                                     <i data-lucide="award" class="icon text-gray-500"></i>
                                     Nilai Maksimal
                                 </label>
                                 <input type="number" id="assignment-max-score" min="1" max="100" value="100" required
                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
                             </div>
+
+                            <!-- Container untuk multiple choice questions -->
+                            <div id="multiple-choice-section" class="hidden">
+                                <div class="border-t pt-6 mt-6">
+                                    <h4 class="text-lg font-bold text-dark mb-4 flex items-center gap-2">
+                                        <i data-lucide="list-checks" class="icon"></i>
+                                        Soal Pilihan Ganda
+                                    </h4>
+                                    
+                                    <div id="questions-container">
+                                        <!-- Questions akan di-generate dinamis -->
+                                    </div>
+                                    
+                                    <button type="button" id="add-question-btn" class="bg-secondary text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 transition-all duration-300 flex items-center gap-2 mt-4">
+                                        <i data-lucide="plus" class="icon"></i>
+                                        Tambah Soal
+                                    </button>
+                                </div>
+                            </div>
+
                             <div class="flex gap-4 flex-wrap">
                                 <button type="submit" class="bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2">
                                     <i data-lucide="save" class="icon"></i>
@@ -676,6 +728,14 @@
             </form>
             
             <div class="mt-6 pt-6 border-t border-gray-200">
+                <div class="bg-blue-50 rounded-lg p-4 mb-4">
+                    <p class="text-sm font-semibold text-blue-800 mb-2">Credentials Testing:</p>
+                    <div class="text-xs text-blue-600 space-y-1">
+                        <p><strong>Admin:</strong> admin / admin123</p>
+                        <p><strong>Guru:</strong> guru001 / guru123</p>
+                        <p><strong>Guru:</strong> guru002 / guru123</p>
+                    </div>
+                </div>
                 <p class="text-sm text-gray-500 text-center">
                     Siswa tidak perlu login. Gunakan ID siswa untuk mengumpulkan tugas.
                 </p>
@@ -786,6 +846,10 @@
         const subjectsTableBody = document.getElementById('subjects-table-body');
         const importForm = document.getElementById('import-form');
         const downloadTemplateBtn = document.getElementById('download-template-btn');
+        const assignmentTypeSelect = document.getElementById('assignment-type');
+        const multipleChoiceSection = document.getElementById('multiple-choice-section');
+        const questionsContainer = document.getElementById('questions-container');
+        const addQuestionBtn = document.getElementById('add-question-btn');
 
         // Event Listeners
         document.addEventListener('DOMContentLoaded', initApp);
@@ -824,6 +888,8 @@
         });
         cancelAssignmentBtn.addEventListener('click', () => {
             createAssignmentForm.classList.add('hidden');
+            multipleChoiceSection.classList.add('hidden');
+            questionsContainer.innerHTML = '';
         });
         assignmentForm.addEventListener('submit', createAssignment);
         refreshAssignmentsBtn.addEventListener('click', loadStudentAssignments);
@@ -834,6 +900,8 @@
         refreshSubjectsBtn.addEventListener('click', loadSubjects);
         importForm.addEventListener('submit', importCSV);
         downloadTemplateBtn.addEventListener('click', downloadTemplate);
+        assignmentTypeSelect.addEventListener('change', handleAssignmentTypeChange);
+        addQuestionBtn.addEventListener('click', addNewQuestion);
         
         // Close modal when clicking on X or outside
         document.querySelector('.close').addEventListener('click', () => {
@@ -944,6 +1012,99 @@
                 !dropdownMenu.contains(event.target)) {
                 toggleUserDropdown();
             }
+        }
+
+        // Handle assignment type change
+        function handleAssignmentTypeChange() {
+            const type = this.value;
+            
+            if (type === 'multiple_choice') {
+                multipleChoiceSection.classList.remove('hidden');
+                addNewQuestion(); // Tambah soal pertama
+            } else {
+                multipleChoiceSection.classList.add('hidden');
+                questionsContainer.innerHTML = '';
+            }
+        }
+
+        // Fungsi untuk tambah soal baru
+        function addNewQuestion() {
+            const questionId = 'question_' + Date.now();
+            
+            const questionHTML = `
+                <div class="bg-gray-50 rounded-xl p-4 mb-4 border" data-question-id="${questionId}">
+                    <div class="flex justify-between items-center mb-3">
+                        <h5 class="font-semibold text-dark">Soal Baru</h5>
+                        <button type="button" class="text-red-500 hover:text-red-700 delete-question" data-question-id="${questionId}">
+                            <i data-lucide="trash-2" class="icon"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-dark mb-2">Pertanyaan</label>
+                        <textarea class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary question-text" 
+                                  placeholder="Tulis pertanyaan di sini..." rows="2"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-dark mb-2">Pilihan Jawaban</label>
+                        <div class="space-y-2 options-container">
+                            <div class="flex items-center gap-2 option-item">
+                                <input type="radio" name="correct_${questionId}" value="A" class="correct-option">
+                                <input type="text" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary option-text" 
+                                       placeholder="Pilihan A" data-option="A">
+                            </div>
+                            <div class="flex items-center gap-2 option-item">
+                                <input type="radio" name="correct_${questionId}" value="B" class="correct-option">
+                                <input type="text" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary option-text" 
+                                       placeholder="Pilihan B" data-option="B">
+                            </div>
+                        </div>
+                        <button type="button" class="add-option-btn text-primary hover:text-primary-dark text-sm flex items-center gap-1 mt-2" data-question-id="${questionId}">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            Tambah Pilihan
+                        </button>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-dark mb-2">Nilai Maksimal</label>
+                        <input type="number" class="question-score w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" 
+                               value="1" min="1">
+                    </div>
+                </div>
+            `;
+            
+            questionsContainer.insertAdjacentHTML('beforeend', questionHTML);
+            lucide.createIcons();
+            
+            // Add event listeners untuk question ini
+            const newQuestion = questionsContainer.lastElementChild;
+            newQuestion.querySelector('.delete-question').addEventListener('click', function() {
+                this.closest('[data-question-id]').remove();
+            });
+            
+            newQuestion.querySelector('.add-option-btn').addEventListener('click', function() {
+                addOptionToQuestion(questionId);
+            });
+        }
+
+        // Fungsi untuk tambah pilihan jawaban
+        function addOptionToQuestion(questionId) {
+            const questionElement = document.querySelector(`[data-question-id="${questionId}"]`);
+            const optionsContainer = questionElement.querySelector('.options-container');
+            
+            const options = optionsContainer.querySelectorAll('.option-item');
+            const nextOption = String.fromCharCode(65 + options.length); // A, B, C, D, etc.
+            
+            const optionHTML = `
+                <div class="flex items-center gap-2 option-item">
+                    <input type="radio" name="correct_${questionId}" value="${nextOption}" class="correct-option">
+                    <input type="text" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary option-text" 
+                           placeholder="Pilihan ${nextOption}" data-option="${nextOption}">
+                </div>
+            `;
+            
+            optionsContainer.insertAdjacentHTML('beforeend', optionHTML);
         }
 
         // Fungsi inisialisasi aplikasi
@@ -1242,10 +1403,11 @@
             const deadline = document.getElementById('assignment-deadline').value;
             const subject = document.getElementById('assignment-subject').value;
             const maxScore = document.getElementById('assignment-max-score').value;
+            const assignmentType = document.getElementById('assignment-type').value;
             
             try {
-                // Insert ke Supabase
-                const { data, error } = await supabase
+                // Insert assignment ke Supabase
+                const { data: assignmentData, error: assignmentError } = await supabase
                     .from('assignments')
                     .insert([
                         {
@@ -1254,20 +1416,71 @@
                             deadline: deadline,
                             subject: subject,
                             max_score: parseInt(maxScore),
-                            created_by: currentUser.id
+                            created_by: currentUser.id,
+                            assignment_type: assignmentType
                         }
                     ])
                     .select();
 
-                if (error) throw error;
+                if (assignmentError) throw assignmentError;
+
+                const assignmentId = assignmentData[0].id;
+                
+                // Jika tipe multiple choice, insert questions
+                if (assignmentType === 'multiple_choice') {
+                    await saveMultipleChoiceQuestions(assignmentId);
+                }
 
                 showAlert('Tugas berhasil dibuat!', 'success');
                 assignmentForm.reset();
                 createAssignmentForm.classList.add('hidden');
-                loadTeacherAssignments(); // Refresh list
+                multipleChoiceSection.classList.add('hidden');
+                questionsContainer.innerHTML = '';
+                loadTeacherAssignments();
             } catch (error) {
                 console.error('Create assignment error:', error);
                 showAlert('Gagal membuat tugas: ' + error.message, 'error');
+            }
+        }
+
+        // Fungsi untuk save multiple choice questions
+        async function saveMultipleChoiceQuestions(assignmentId) {
+            const questions = document.querySelectorAll('[data-question-id]');
+            const questionsData = [];
+            
+            for (const questionElement of questions) {
+                const questionText = questionElement.querySelector('.question-text').value;
+                const questionScore = questionElement.querySelector('.question-score').value;
+                const correctAnswer = questionElement.querySelector('.correct-option:checked')?.value;
+                const options = {};
+                
+                // Collect options
+                questionElement.querySelectorAll('.option-item').forEach(optionItem => {
+                    const optionKey = optionItem.querySelector('.option-text').dataset.option;
+                    const optionValue = optionItem.querySelector('.option-text').value;
+                    if (optionValue) {
+                        options[optionKey] = optionValue;
+                    }
+                });
+                
+                if (questionText && correctAnswer && Object.keys(options).length >= 2) {
+                    questionsData.push({
+                        assignment_id: assignmentId,
+                        question_text: questionText,
+                        question_type: 'multiple_choice',
+                        options: options,
+                        correct_answer: correctAnswer,
+                        max_score: parseInt(questionScore)
+                    });
+                }
+            }
+            
+            if (questionsData.length > 0) {
+                const { error: questionsError } = await supabase
+                    .from('assignment_questions')
+                    .insert(questionsData);
+                    
+                if (questionsError) throw questionsError;
             }
         }
         
@@ -1282,7 +1495,7 @@
                         <h3 class="text-xl font-bold text-dark mb-3">Matematika - Persamaan Kuadrat</h3>
                         <p class="text-gray-600 mb-4">Selesaikan soal-soal persamaan kuadrat pada halaman 45-46 buku paket.</p>
                         <div class="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
-                            <span class="flex items-center gap-1"><i data-lucide="calendar" class="icon"></i> Batas: 25 Des 2023, 23:59</span>
+                            <span class="flex items-center gap-1"><i data-lucide="calendar" class="icon"></i> Batas: 25 Des 2024, 23:59</span>
                             <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">Belum Dikumpulkan</span>
                         </div>
                         <div class="flex gap-3 flex-wrap">
@@ -1332,7 +1545,10 @@
                 // Render assignments
                 teacherAssignmentsList.innerHTML = assignments.map(assignment => `
                     <div class="bg-white rounded-xl p-6 shadow-lg border hover:shadow-xl transition-all duration-300 border-l-4 border-primary mb-4">
-                        <h3 class="text-xl font-bold text-dark mb-3">${assignment.subject} - ${assignment.title}</h3>
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="text-xl font-bold text-dark">${assignment.subject} - ${assignment.title}</h3>
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold capitalize">${assignment.assignment_type}</span>
+                        </div>
                         <p class="text-gray-600 mb-4">${assignment.description}</p>
                         <div class="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
                             <span class="flex items-center gap-1">
@@ -1535,10 +1751,42 @@
         
         // Fungsi untuk memuat statistik
         async function loadStats() {
-            document.getElementById('total-users').textContent = '156';
-            document.getElementById('total-assignments').textContent = '23';
-            document.getElementById('total-submissions').textContent = '189';
-            document.getElementById('active-courses').textContent = '8';
+            // Hitung total users
+            const { data: users, error: usersError } = await supabase
+                .from('users')
+                .select('id');
+            
+            if (!usersError) {
+                document.getElementById('total-users').textContent = users.length;
+            }
+            
+            // Hitung total assignments
+            const { data: assignments, error: assignmentsError } = await supabase
+                .from('assignments')
+                .select('id');
+            
+            if (!assignmentsError) {
+                document.getElementById('total-assignments').textContent = assignments.length;
+            }
+            
+            // Hitung total submissions
+            const { data: submissions, error: submissionsError } = await supabase
+                .from('submissions')
+                .select('id');
+            
+            if (!submissionsError) {
+                document.getElementById('total-submissions').textContent = submissions?.length || 0;
+            }
+            
+            // Hitung active courses (subjects)
+            const { data: subjects, error: subjectsError } = await supabase
+                .from('assignments')
+                .select('subject');
+            
+            if (!subjectsError) {
+                const uniqueSubjects = [...new Set(subjects.map(s => s.subject))];
+                document.getElementById('active-courses').textContent = uniqueSubjects.length;
+            }
         }
     </script>
 </body>

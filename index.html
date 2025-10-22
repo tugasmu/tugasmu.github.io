@@ -52,6 +52,17 @@
             to { opacity: 1; transform: translateX(0); }
         }
         
+        @keyframes dropdownFade {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
         .animate-fade-in {
             animation: fadeIn 0.5s ease;
         }
@@ -59,7 +70,17 @@
         .animate-slide-in-right {
             animation: slideInRight 0.3s ease;
         }
-        
+
+        /* Dropdown Animation */
+        #user-dropdown-menu {
+            animation: dropdownFade 0.2s ease-out;
+        }
+
+        /* User dropdown button hover effect */
+        #user-dropdown-btn:hover {
+            background: rgba(99, 102, 241, 0.05);
+        }
+
         /* Icon styling */
         .icon {
             @apply w-5 h-5;
@@ -73,54 +94,15 @@
             @apply w-8 h-8;
         }
 
-        /* Responsive design untuk navbar */
         @media (max-width: 768px) {
-            .container {
-                padding-left: 1rem;
-                padding-right: 1rem;
+            #user-dropdown-btn .mobile-hidden {
+                display: none !important;
             }
             
-            nav {
-                gap: 0.5rem;
+            #user-dropdown-menu {
+                right: -10px;
+                width: 200px;
             }
-            
-            .nav-link {
-                padding-left: 0.75rem;
-                padding-right: 0.75rem;
-                font-size: 0.875rem;
-            }
-            
-            /* Sembunyikan teks pada mobile, tampilkan icon saja */
-            .nav-link span:not(.icon) {
-                display: none;
-            }
-            
-            .nav-link .icon {
-                margin-right: 0;
-            }
-        }
-
-        /* Smooth transitions */
-        .nav-link {
-            position: relative;
-            transition: all 0.3s ease;
-        }
-
-        .nav-link.active {
-            color: #4361ee;
-            font-weight: 600;
-        }
-
-        .nav-link.active::after {
-            content: '';
-            position: absolute;
-            bottom: -8px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 20px;
-            height: 2px;
-            background: #4361ee;
-            border-radius: 2px;
         }
     </style>
 </head>
@@ -129,60 +111,72 @@
     <div id="alert-container" class="fixed bottom-4 right-4 z-50 space-y-2 max-w-sm"></div>
 
     <!-- Header -->
-    <header class="bg-white/95 backdrop-blur-lg shadow-lg sticky top-0 z-40 border-b border-gray-200">
+    <header class="bg-white shadow-lg sticky top-0 z-40 border-b">
         <div class="container mx-auto px-4">
-            <div class="flex items-center justify-between py-3">
-                <!-- Logo Section -->
-                <div class="flex items-center gap-3 flex-shrink-0">
-                    <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center text-white font-bold shadow-lg">
+            <div class="flex items-center justify-between py-4">
+                <!-- Logo -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white">
                         <i data-lucide="book-open" class="w-5 h-5"></i>
                     </div>
-                    <div class="hidden sm:block">
-                        <span class="text-xl font-bold text-dark">Tugasmu</span>
-                        <p class="text-xs text-gray-500 -mt-1">Sistem Pengumpulan Tugas</p>
-                    </div>
+                    <span class="text-xl font-bold text-dark">Tugasmu</span>
                 </div>
 
-                <!-- Navigation - Center -->
-                <nav class="flex items-center gap-1 mx-4">
-                    <a href="#" class="nav-link px-4 py-2 rounded-lg font-medium text-dark hover:bg-primary hover:text-white transition-all duration-300 active flex items-center gap-2 text-sm" data-page="home">
-                        <i data-lucide="home" class="w-4 h-4"></i>
+                <!-- Navigation -->
+                <nav class="flex items-center gap-6">
+                    <a href="#" class="nav-link font-medium text-gray-600 hover:text-primary transition-colors duration-300 active" data-page="home">
                         Beranda
                     </a>
-                    <a href="#" class="nav-link px-4 py-2 rounded-lg font-medium text-dark hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2 text-sm" data-page="assignments">
-                        <i data-lucide="clipboard-list" class="w-4 h-4"></i>
+                    <a href="#" class="nav-link font-medium text-gray-600 hover:text-primary transition-colors duration-300" data-page="assignments">
                         Tugas
                     </a>
-                    <a href="#" class="nav-link px-4 py-2 rounded-lg font-medium text-dark hover:bg-primary hover:text-white transition-all duration-300 hidden items-center gap-2 text-sm" id="admin-nav" data-page="admin">
-                        <i data-lucide="settings" class="w-4 h-4"></i>
+                    <a href="#" class="nav-link font-medium text-gray-600 hover:text-primary transition-colors duration-300 hidden" id="admin-nav" data-page="admin">
                         Admin
                     </a>
                 </nav>
 
-                <!-- User Section - Right -->
-                <div class="flex items-center gap-3 flex-shrink-0">
-                    <!-- User Info -->
-                    <div id="user-info" class="hidden items-center gap-3">
-                        <div class="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2 border">
-                            <div class="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                <i data-lucide="user" class="w-4 h-4"></i>
+                <!-- User Area -->
+                <div class="flex items-center gap-4">
+                    <!-- User Info Dropdown -->
+                    <div id="user-info" class="hidden relative">
+                        <button id="user-dropdown-btn" class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors duration-300">
+                            <div class="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-sm font-medium shadow-md">
+                                U
                             </div>
-                            <div class="hidden md:flex flex-col">
-                                <span id="user-name" class="font-semibold text-dark text-sm">Budi Santoso</span>
-                                <span class="text-xs text-gray-500">Guru</span>
+                            <div class="mobile-hidden text-left">
+                                <div id="user-name" class="text-sm font-medium text-dark">User</div>
+                                <div id="user-role" class="text-xs text-gray-500">Role</div>
                             </div>
-                        </div>
-                        <button id="logout-btn" class="px-3 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-all duration-300 text-sm flex items-center gap-2">
-                            <i data-lucide="log-out" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Keluar</span>
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 mobile-hidden"></i>
                         </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div id="user-dropdown-menu" class="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 hidden z-50">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <div class="text-sm font-medium text-dark" id="dropdown-user-name">User</div>
+                                <div class="text-xs text-gray-500" id="dropdown-user-role">Role</div>
+                            </div>
+                            <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-300">
+                                <i data-lucide="user" class="w-4 h-4"></i>
+                                Profile Saya
+                            </a>
+                            <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-300">
+                                <i data-lucide="settings" class="w-4 h-4"></i>
+                                Pengaturan
+                            </a>
+                            <div class="border-t border-gray-100 mt-1"></div>
+                            <button id="logout-dropdown-btn" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-300">
+                                <i data-lucide="log-out" class="w-4 h-4"></i>
+                                Keluar
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Login Button -->
                     <div id="login-section">
-                        <button id="login-btn" class="px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2 text-sm">
+                        <button id="login-btn" class="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-dark transition-colors duration-300 flex items-center gap-2">
                             <i data-lucide="log-in" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Masuk</span>
+                            Masuk
                         </button>
                     </div>
                 </div>
@@ -504,7 +498,7 @@
                 <div class="flex gap-4 mb-6 flex-wrap">
                     <button id="add-user-btn" class="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2">
                         <i data-lucide="user-plus" class="icon"></i>
-                        Tambah Guru
+                        Tambah Pengguna
                     </button>
                     <button id="refresh-users-btn" class="border-2 border-primary text-primary px-6 py-2 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2">
                         <i data-lucide="refresh-cw" class="icon"></i>
@@ -689,6 +683,57 @@
         </div>
     </div>
 
+    <!-- Add User Modal -->
+    <div id="add-user-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-4 animate-fade-in">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-dark flex items-center gap-2">
+                    <i data-lucide="user-plus" class="icon-lg"></i>
+                    Tambah Pengguna
+                </h2>
+                <button class="close-add-user text-2xl text-gray-500 hover:text-dark transition-colors duration-300">
+                    <i data-lucide="x" class="icon-lg"></i>
+                </button>
+            </div>
+            
+            <form id="add-user-form" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-dark mb-2">Nama Lengkap</label>
+                    <input type="text" id="new-user-name" required placeholder="Masukkan nama lengkap"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-dark mb-2">User ID</label>
+                    <input type="text" id="new-user-id" required placeholder="Masukkan User ID"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-dark mb-2">Password</label>
+                    <input type="password" id="new-user-password" required placeholder="Masukkan password"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-dark mb-2">Peran</label>
+                    <select id="new-user-role" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                        <option value="">Pilih Peran</option>
+                        <option value="teacher">Guru</option>
+                        <option value="student">Siswa</option>
+                    </select>
+                </div>
+                <div class="flex gap-4 flex-wrap">
+                    <button type="submit" class="bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2">
+                        <i data-lucide="save" class="icon"></i>
+                        Simpan
+                    </button>
+                    <button type="button" id="cancel-add-user" class="border-2 border-primary text-primary px-6 py-3 rounded-xl font-semibold hover:bg-primary hover:text-white transition-all duration-300">
+                        Batal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // Inisialisasi Lucide Icons
         lucide.createIcons();
@@ -702,6 +747,7 @@
         // Variabel global
         let currentUser = null;
         let userRole = null;
+        let dropdownOpen = false;
         
         // DOM Elements
         const alertContainer = document.getElementById('alert-container');
@@ -709,17 +755,19 @@
         const assignmentsPage = document.getElementById('assignments-page');
         const adminPage = document.getElementById('admin-page');
         const authModal = document.getElementById('auth-modal');
+        const addUserModal = document.getElementById('add-user-modal');
         const loginBtn = document.getElementById('login-btn');
-        const logoutBtn = document.getElementById('logout-btn');
         const heroLoginBtn = document.getElementById('hero-login-btn');
+        const logoutDropdownBtn = document.getElementById('logout-dropdown-btn');
+        const userDropdownBtn = document.getElementById('user-dropdown-btn');
         const loginSection = document.getElementById('login-section');
         const userInfo = document.getElementById('user-info');
-        const userName = document.getElementById('user-name');
         const adminNav = document.getElementById('admin-nav');
         const navLinks = document.querySelectorAll('.nav-link');
         const tabs = document.querySelectorAll('.tab');
         const tabContents = document.querySelectorAll('.tab-content');
         const loginForm = document.getElementById('login-form');
+        const addUserForm = document.getElementById('add-user-form');
         const createAssignmentBtn = document.getElementById('create-assignment-btn');
         const createAssignmentForm = document.getElementById('create-assignment-form');
         const assignmentForm = document.getElementById('assignment-form');
@@ -743,7 +791,8 @@
         document.addEventListener('DOMContentLoaded', initApp);
         loginBtn.addEventListener('click', () => showAuthModal());
         heroLoginBtn.addEventListener('click', () => showAuthModal());
-        logoutBtn.addEventListener('click', logout);
+        logoutDropdownBtn.addEventListener('click', logout);
+        userDropdownBtn.addEventListener('click', toggleUserDropdown);
         
         navLinks.forEach(link => {
             link.addEventListener('click', (e) => {
@@ -769,6 +818,7 @@
         });
         
         loginForm.addEventListener('submit', login);
+        addUserForm.addEventListener('submit', addUser);
         createAssignmentBtn.addEventListener('click', () => {
             createAssignmentForm.classList.remove('hidden');
         });
@@ -790,10 +840,22 @@
             authModal.classList.add('hidden');
         });
         
+        document.querySelector('.close-add-user').addEventListener('click', () => {
+            addUserModal.classList.add('hidden');
+        });
+        
+        document.getElementById('cancel-add-user').addEventListener('click', () => {
+            addUserModal.classList.add('hidden');
+        });
+        
         window.addEventListener('click', (e) => {
             if (e.target === authModal) {
                 authModal.classList.add('hidden');
             }
+            if (e.target === addUserModal) {
+                addUserModal.classList.add('hidden');
+            }
+            closeDropdownOnClickOutside(e);
         });
 
         // Fungsi untuk menampilkan alert
@@ -833,6 +895,55 @@
                     alert.remove();
                 }
             }, 5000);
+        }
+
+        // Fungsi untuk generate avatar initials
+        function getAvatarInitials(name) {
+            if (!name) return 'U';
+            
+            const names = name.split(' ');
+            let initials = '';
+            
+            if (names.length === 1) {
+                initials = names[0].substring(0, 2).toUpperCase();
+            } else {
+                initials = (names[0][0] + names[names.length - 1][0]).toUpperCase();
+            }
+            
+            return initials;
+        }
+
+        // Dropdown functionality
+        function toggleUserDropdown() {
+            const dropdownMenu = document.getElementById('user-dropdown-menu');
+            const dropdownBtn = document.getElementById('user-dropdown-btn');
+            const chevron = dropdownBtn.querySelector('i[data-lucide="chevron-down"]');
+            
+            dropdownOpen = !dropdownOpen;
+            
+            if (dropdownOpen) {
+                dropdownMenu.classList.remove('hidden');
+                // Rotate chevron
+                chevron.style.transform = 'rotate(180deg)';
+            } else {
+                dropdownMenu.classList.add('hidden');
+                // Reset chevron
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Close dropdown when clicking outside
+        function closeDropdownOnClickOutside(event) {
+            const userInfo = document.getElementById('user-info');
+            const dropdownBtn = document.getElementById('user-dropdown-btn');
+            const dropdownMenu = document.getElementById('user-dropdown-menu');
+            
+            if (dropdownOpen && 
+                !userInfo.contains(event.target) && 
+                !dropdownBtn.contains(event.target) &&
+                !dropdownMenu.contains(event.target)) {
+                toggleUserDropdown();
+            }
         }
 
         // Fungsi inisialisasi aplikasi
@@ -885,28 +996,42 @@
             const userInfo = document.getElementById('user-info');
             const userName = document.getElementById('user-name');
             const userRole = document.getElementById('user-role');
+            const dropdownUserName = document.getElementById('dropdown-user-name');
+            const dropdownUserRole = document.getElementById('dropdown-user-role');
+            const userAvatar = document.querySelector('#user-info .w-8.h-8');
             
             if (currentUser) {
                 // User sudah login
                 loginSection.classList.add('hidden');
                 userInfo.classList.remove('hidden');
-                userName.textContent = currentUser.name;
-                userRole.textContent = currentUser.role;
+                
+                // Update user data
+                const displayName = currentUser.name;
+                const displayRole = currentUser.role === 'admin' ? 'Developer' : 
+                                  currentUser.role === 'teacher' ? 'Guru' : 'Siswa';
+                
+                if (userName) userName.textContent = displayName;
+                if (userRole) userRole.textContent = displayRole;
+                if (dropdownUserName) dropdownUserName.textContent = displayName;
+                if (dropdownUserRole) dropdownUserRole.textContent = displayRole;
+                if (userAvatar) {
+                    userAvatar.textContent = getAvatarInitials(currentUser.name);
+                }
                 
                 // Tampilkan admin nav jika role admin
-                if (currentUser.role === 'admin') {
-                    adminNav.classList.remove('hidden');
-                } else {
-                    adminNav.classList.add('hidden');
-                }
+                adminNav.classList.toggle('hidden', currentUser.role !== 'admin');
+                
             } else {
                 // User belum login
                 loginSection.classList.remove('hidden');
                 userInfo.classList.add('hidden');
                 adminNav.classList.add('hidden');
+                
+                // Pastikan dropdown tertutup
+                document.getElementById('user-dropdown-menu').classList.add('hidden');
+                dropdownOpen = false;
             }
             
-            // Refresh icons
             lucide.createIcons();
         }
         
@@ -915,7 +1040,6 @@
             // Reset semua view dulu
             studentView.classList.add('hidden');
             teacherView.classList.add('hidden');
-            adminNav.classList.add('hidden');
             
             if (userRole === 'student') {
                 studentView.classList.remove('hidden');
@@ -927,7 +1051,6 @@
                 loadTeacherAssignments();
             } else if (userRole === 'admin') {
                 teacherView.classList.add('hidden');
-                adminNav.classList.remove('hidden');
                 // Load data admin
                 loadUsers();
                 loadSubjects();
@@ -979,6 +1102,12 @@
         // Fungsi untuk menampilkan modal autentikasi
         function showAuthModal() {
             authModal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        // Fungsi untuk menampilkan modal tambah user
+        function showAddUserModal() {
+            addUserModal.classList.remove('hidden');
             lucide.createIcons();
         }
         
@@ -1045,9 +1174,48 @@
                 showAlert('Login gagal: ' + error.message, 'error');
             }
         }
+
+        // Fungsi untuk menambah user (admin)
+        async function addUser(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('new-user-name').value;
+            const userid = document.getElementById('new-user-id').value;
+            const password = document.getElementById('new-user-password').value;
+            const role = document.getElementById('new-user-role').value;
+            
+            try {
+                // Insert ke Supabase
+                const { data, error } = await supabase
+                    .from('users')
+                    .insert([
+                        {
+                            name: name,
+                            user_id: userid,
+                            password: password,
+                            role: role
+                        }
+                    ])
+                    .select();
+
+                if (error) throw error;
+
+                showAlert('Pengguna berhasil ditambahkan!', 'success');
+                addUserForm.reset();
+                addUserModal.classList.add('hidden');
+                loadUsers(); // Refresh user list
+            } catch (error) {
+                console.error('Add user error:', error);
+                showAlert('Gagal menambah pengguna: ' + error.message, 'error');
+            }
+        }
         
         // Fungsi untuk logout
         async function logout() {
+            // Tutup dropdown dulu
+            dropdownOpen = false;
+            document.getElementById('user-dropdown-menu').classList.add('hidden');
+            
             // Hapus dari localStorage
             localStorage.removeItem('currentUser');
             
@@ -1074,7 +1242,6 @@
             const deadline = document.getElementById('assignment-deadline').value;
             const subject = document.getElementById('assignment-subject').value;
             const maxScore = document.getElementById('assignment-max-score').value;
-            const classId = document.getElementById('assignment-class').value;
             
             try {
                 // Insert ke Supabase
@@ -1087,8 +1254,7 @@
                             deadline: deadline,
                             subject: subject,
                             max_score: parseInt(maxScore),
-                            created_by: currentUser.id,
-                            class_id: classId
+                            created_by: currentUser.id
                         }
                     ])
                     .select();
@@ -1098,7 +1264,7 @@
                 showAlert('Tugas berhasil dibuat!', 'success');
                 assignmentForm.reset();
                 createAssignmentForm.classList.add('hidden');
-                loadTeacherAssignments();
+                loadTeacherAssignments(); // Refresh list
             } catch (error) {
                 console.error('Create assignment error:', error);
                 showAlert('Gagal membuat tugas: ' + error.message, 'error');
@@ -1129,26 +1295,6 @@
                 `;
                 lucide.createIcons();
             }, 1000);
-        }
-
-        // Fungsi untuk menghapus tugas
-        async function deleteAssignment(assignmentId) {
-            if (!confirm('Apakah Anda yakin ingin menghapus tugas ini?')) return;
-            
-            try {
-                const { error } = await supabase
-                    .from('assignments')
-                    .delete()
-                    .eq('id', assignmentId);
-
-                if (error) throw error;
-
-                showAlert('Tugas berhasil dihapus!', 'success');
-                loadTeacherAssignments(); // Refresh list
-            } catch (error) {
-                console.error('Delete assignment error:', error);
-                showAlert('Gagal menghapus tugas', 'error');
-            }
         }
         
         // Fungsi untuk memuat tugas guru
@@ -1228,33 +1374,24 @@
             }
         }
 
-        async function loadTeacherClasses() {
+        // Fungsi untuk menghapus tugas
+        async function deleteAssignment(assignmentId) {
+            if (!confirm('Apakah Anda yakin ingin menghapus tugas ini?')) return;
+            
             try {
-                const { data, error } = await supabase
-                    .from('classes')
-                    .select('*')
-                    .eq('teacher_id', currentUser.id);
+                const { error } = await supabase
+                    .from('assignments')
+                    .delete()
+                    .eq('id', assignmentId);
 
                 if (error) throw error;
-                return data || [];
-            } catch (error) {
-                console.error('Load classes error:', error);
-                return [];
-            }
-        }
 
-        async function showCreateAssignmentForm() {
-            // Load classes dulu
-            const classes = await loadTeacherClasses();
-            
-            const classSelect = document.getElementById('assignment-class');
-            classSelect.innerHTML = '<option value="">Pilih Kelas</option>';
-            
-            classes.forEach(classItem => {
-                classSelect.innerHTML += `<option value="${classItem.id}">${classItem.name} - ${classItem.grade}</option>`;
-            });
-            
-            createAssignmentForm.classList.remove('hidden');
+                showAlert('Tugas berhasil dihapus!', 'success');
+                loadTeacherAssignments(); // Refresh list
+            } catch (error) {
+                console.error('Delete assignment error:', error);
+                showAlert('Gagal menghapus tugas', 'error');
+            }
         }
         
         // Fungsi untuk memuat data pengguna (admin)
@@ -1262,16 +1399,36 @@
             usersTableBody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500"><i data-lucide="loader" class="w-6 h-6 text-gray-400 mx-auto mb-2 animate-spin"></i>Memuat data pengguna...</td></tr>';
             lucide.createIcons();
             
-            setTimeout(() => {
-                usersTableBody.innerHTML = `
+            try {
+                const { data: users, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (users.length === 0) {
+                    usersTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                <i data-lucide="users" class="w-8 h-8 text-gray-400 mx-auto mb-2"></i>
+                                <p>Belum ada data pengguna</p>
+                            </td>
+                        </tr>
+                    `;
+                    lucide.createIcons();
+                    return;
+                }
+
+                usersTableBody.innerHTML = users.map(user => `
                     <tr class="hover:bg-gray-50 transition-colors duration-300">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">TCH-001</span>
+                            <span class="bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">${user.user_id}</span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap font-medium text-dark">Budi Santoso</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-500">budi@sekolah.sch.id</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-dark">${user.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-500">${user.email || '-'}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="bg-secondary text-white px-3 py-1 rounded-full text-xs font-semibold">Guru</span>
+                            <span class="bg-secondary text-white px-3 py-1 rounded-full text-xs font-semibold">${user.role}</span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">Aktif</span>
@@ -1281,15 +1438,47 @@
                                 <button class="border-2 border-primary text-primary px-3 py-1 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 text-sm">
                                     <i data-lucide="edit" class="icon"></i>
                                 </button>
-                                <button class="border-2 border-danger text-danger px-3 py-1 rounded-lg font-semibold hover:bg-danger hover:text-white transition-all duration-300 text-sm">
+                                <button class="border-2 border-danger text-danger px-3 py-1 rounded-lg font-semibold hover:bg-danger hover:text-white transition-all duration-300 text-sm" onclick="deleteUser('${user.user_id}')">
                                     <i data-lucide="trash-2" class="icon"></i>
                                 </button>
                             </div>
                         </td>
                     </tr>
+                `).join('');
+                
+                lucide.createIcons();
+            } catch (error) {
+                console.error('Load users error:', error);
+                usersTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                            <i data-lucide="alert-circle" class="w-6 h-6 text-red-500 mx-auto mb-2"></i>
+                            <p>Gagal memuat data pengguna</p>
+                        </td>
+                    </tr>
                 `;
                 lucide.createIcons();
-            }, 1000);
+            }
+        }
+
+        // Fungsi untuk menghapus user
+        async function deleteUser(userId) {
+            if (!confirm('Apakah Anda yakin ingin menghapus pengguna ini?')) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('users')
+                    .delete()
+                    .eq('user_id', userId);
+
+                if (error) throw error;
+
+                showAlert('Pengguna berhasil dihapus!', 'success');
+                loadUsers(); // Refresh list
+            } catch (error) {
+                console.error('Delete user error:', error);
+                showAlert('Gagal menghapus pengguna', 'error');
+            }
         }
         
         // Fungsi untuk memuat data mata pelajaran (admin)
@@ -1337,11 +1526,6 @@
         // Fungsi untuk download template
         function downloadTemplate() {
             showAlert('Template berhasil didownload!', 'success');
-        }
-        
-        // Fungsi untuk menampilkan modal tambah pengguna
-        function showAddUserModal() {
-            showAlert('Fitur tambah pengguna akan segera tersedia', 'warning');
         }
         
         // Fungsi untuk menampilkan modal tambah mata pelajaran

@@ -1,0 +1,156 @@
+<!-- Home Page -->
+<div id="home-page" class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 animate-fade-in">
+    <!-- Hero Section -->
+    <section class="text-center text-white py-12 md:py-16">
+        <div class="mb-6">
+            <i data-lucide="graduation-cap" class="w-16 h-16 mx-auto mb-4 text-white/90"></i>
+        </div>
+        <h1 class="text-4xl md:text-6xl font-bold mb-6">Sistem Pengumpulan Tugas Online</h1>
+        <p class="text-xl md:text-2xl opacity-90 max-w-2xl mx-auto mb-8">
+            Platform modern untuk guru dan siswa dalam mengelola tugas sekolah dengan mudah dan efisien
+        </p>
+        <button id="hero-login-btn" class="bg-white text-primary px-8 py-3 rounded-xl font-bold hover:bg-gray-100 transition-all duration-300 shadow-lg flex items-center gap-2 mx-auto">
+            <i data-lucide="rocket" class="icon-lg"></i>
+            Mulai Sekarang
+        </button>
+    </section>
+
+    <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4 flex items-center gap-3">
+        <i data-lucide="sparkles" class="icon-xl"></i>
+        Selamat Datang di Tugasmu
+    </h1>
+    <p class="text-gray-600 text-lg mb-8">
+        Sistem pengumpulan tugas modern yang dirancang khusus untuk kebutuhan sekolah dengan antarmuka yang intuitif.
+    </p>
+
+    <!-- Tabs -->
+    <div class="border-b border-gray-200 mb-8">
+        <div class="flex flex-wrap gap-4">
+            <button class="tab px-6 py-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-primary transition-all duration-300 active flex items-center gap-2" data-tab="info">
+                <i data-lucide="info" class="icon"></i>
+                Informasi
+            </button>
+            <button class="tab px-6 py-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-primary transition-all duration-300 flex items-center gap-2" data-tab="features">
+                <i data-lucide="zap" class="icon"></i>
+                Fitur
+            </button>
+            <button class="tab px-6 py-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-primary transition-all duration-300 flex items-center gap-2" data-tab="stats">
+                <i data-lucide="bar-chart-3" class="icon"></i>
+                Statistik
+            </button>
+        </div>
+    </div>
+
+    <!-- Tab Contents -->
+    <div class="tab-content active" id="info-tab">
+        <h2 class="text-2xl font-bold text-dark mb-6 flex items-center gap-2">
+            <i data-lucide="book-open" class="icon-lg"></i>
+            Tentang Sistem
+        </h2>
+        <p class="text-gray-600 mb-8">Tugasmu menyediakan solusi lengkap untuk manajemen tugas sekolah:</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white border-l-4 border-primary rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border">
+                <div class="flex items-center gap-3 mb-3">
+                    <i data-lucide="code" class="icon-lg text-primary"></i>
+                    <h3 class="text-xl font-bold text-dark">Untuk Developer</h3>
+                </div>
+                <p class="text-gray-600">Kelola sistem secara keseluruhan, impor data siswa, dan pantau performa aplikasi.</p>
+            </div>
+            <div class="bg-white border-l-4 border-primary rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border">
+                <div class="flex items-center gap-3 mb-3">
+                    <i data-lucide="user-check" class="icon-lg text-primary"></i>
+                    <h3 class="text-xl font-bold text-dark">Untuk Guru</h3>
+                </div>
+                <p class="text-gray-600">Buat dan kelola tugas, beri nilai, pantau perkembangan siswa dengan dashboard lengkap.</p>
+            </div>
+            <div class="bg-white border-l-4 border-primary rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border">
+                <div class="flex items-center gap-3 mb-3">
+                    <i data-lucide="users" class="icon-lg text-primary"></i>
+                    <h3 class="text-xl font-bold text-dark">Untuk Siswa</h3>
+                </div>
+                <p class="text-gray-600">Akses tugas, kumpulkan pekerjaan, dan lihat nilai dengan mudah menggunakan ID unik.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content hidden" id="features-tab">
+        <h2 class="text-2xl font-bold text-dark mb-6 flex items-center gap-2">
+            <i data-lucide="star" class="icon-lg"></i>
+            Fitur Unggulan
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border">
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="activity" class="icon text-primary"></i>
+                    <h3 class="text-lg font-bold text-dark">Dashboard Real-time</h3>
+                </div>
+                <p class="text-gray-600 text-sm">Monitor aktivitas dan statistik secara langsung dengan update real-time.</p>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border">
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="upload" class="icon text-primary"></i>
+                    <h3 class="text-lg font-bold text-dark">Import Siswa</h3>
+                </div>
+                <p class="text-gray-600 text-sm">Impor data siswa dari file CSV dengan mudah, generate ID otomatis.</p>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border">
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="file-edit" class="icon text-primary"></i>
+                    <h3 class="text-lg font-bold text-dark">Buat Tugas</h3>
+                </div>
+                <p class="text-gray-600 text-sm">Buat tugas dengan deadline, instruksi detail, dan pengaturan nilai.</p>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border">
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="send" class="icon text-primary"></i>
+                    <h3 class="text-lg font-bold text-dark">Kumpulkan Tugas</h3>
+                </div>
+                <p class="text-gray-600 text-sm">Siswa dapat mengumpulkan tugas dengan mudah menggunakan ID unik.</p>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border">
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="file-text" class="icon text-primary"></i>
+                    <h3 class="text-lg font-bold text-dark">Laporan Detail</h3>
+                </div>
+                <p class="text-gray-600 text-sm">Analitik lengkap untuk guru dan administrator.</p>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border">
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="shield" class="icon text-primary"></i>
+                    <h3 class="text-lg font-bold text-dark">Keamanan</h3>
+                </div>
+                <p class="text-gray-600 text-sm">Sistem autentikasi aman dengan Supabase.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content hidden" id="stats-tab">
+        <h2 class="text-2xl font-bold text-dark mb-6 flex items-center gap-2">
+            <i data-lucide="bar-chart-3" class="icon-lg"></i>
+            Statistik Sistem
+        </h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div class="bg-white rounded-xl p-6 text-center shadow-lg">
+                <i data-lucide="users" class="w-8 h-8 text-primary mx-auto mb-3"></i>
+                <h3 class="text-3xl font-bold text-primary mb-2" id="total-users">0</h3>
+                <p class="text-gray-600">Total Pengguna</p>
+            </div>
+            <div class="bg-white rounded-xl p-6 text-center shadow-lg">
+                <i data-lucide="clipboard-list" class="w-8 h-8 text-primary mx-auto mb-3"></i>
+                <h3 class="text-3xl font-bold text-primary mb-2" id="total-assignments">0</h3>
+                <p class="text-gray-600">Tugas Dibuat</p>
+            </div>
+            <div class="bg-white rounded-xl p-6 text-center shadow-lg">
+                <i data-lucide="send" class="w-8 h-8 text-primary mx-auto mb-3"></i>
+                <h3 class="text-3xl font-bold text-primary mb-2" id="total-submissions">0</h3>
+                <p class="text-gray-600">Pengumpulan Tugas</p>
+            </div>
+            <div class="bg-white rounded-xl p-6 text-center shadow-lg">
+                <i data-lucide="book-open" class="w-8 h-8 text-primary mx-auto mb-3"></i>
+                <h3 class="text-3xl font-bold text-primary mb-2" id="active-courses">0</h3>
+                <p class="text-gray-600">Mata Pelajaran</p>
+            </div>
+        </div>
+    </div>
+</div>

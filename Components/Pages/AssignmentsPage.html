@@ -1,0 +1,156 @@
+<!-- Assignments Page -->
+<div id="assignments-page" class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 hidden animate-fade-in">
+    <h1 class="text-3xl md:text-4xl font-bold text-dark mb-6 flex items-center gap-3">
+        <i data-lucide="clipboard-list" class="icon-xl"></i>
+        Manajemen Tugas
+    </h1>
+    
+    <!-- Student View -->
+    <div id="student-view" class="hidden">
+        <h2 class="text-2xl font-bold text-dark mb-6 flex items-center gap-2">
+            <i data-lucide="book-text" class="icon-lg"></i>
+            Tugas Saya
+        </h2>
+        <div class="flex gap-4 mb-6 flex-wrap">
+            <button id="refresh-assignments-btn" class="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2">
+                <i data-lucide="refresh-cw" class="icon"></i>
+                Refresh
+            </button>
+        </div>
+        <div id="student-assignments-list">
+            <div class="bg-white rounded-xl p-6 text-center shadow-lg border">
+                <i data-lucide="loader" class="w-8 h-8 text-gray-400 mx-auto mb-3 animate-spin"></i>
+                <p class="text-gray-600">Memuat daftar tugas...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Teacher View -->
+    <div id="teacher-view" class="hidden">
+        <h2 class="text-2xl font-bold text-dark mb-6 flex items-center gap-2">
+            <i data-lucide="user-check" class="icon-lg"></i>
+            Manajemen Tugas
+        </h2>
+        <div class="flex gap-4 mb-6 flex-wrap">
+            <button id="create-assignment-btn" class="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2">
+                <i data-lucide="plus" class="icon"></i>
+                Buat Tugas Baru
+            </button>
+            <button id="refresh-teacher-assignments-btn" class="border-2 border-primary text-primary px-6 py-2 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2">
+                <i data-lucide="refresh-cw" class="icon"></i>
+                Refresh
+            </button>
+        </div>
+        
+        <div id="teacher-assignments-list">
+            <div class="bg-white rounded-xl p-6 text-center shadow-lg border">
+                <i data-lucide="loader" class="w-8 h-8 text-gray-400 mx-auto mb-3 animate-spin"></i>
+                <p class="text-gray-600">Memuat daftar tugas...</p>
+            </div>
+        </div>
+        
+        <!-- Create Assignment Form -->
+        <div id="create-assignment-form" class="hidden mt-8">
+            <div class="bg-white rounded-xl p-6 shadow-lg border">
+                <h3 class="text-xl font-bold text-dark mb-6 flex items-center gap-2">
+                    <i data-lucide="file-edit" class="icon-lg"></i>
+                    Buat Tugas Baru
+                </h3>
+                <form id="assignment-form" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-dark mb-2 flex items-center gap-2">
+                            <i data-lucide="type" class="icon text-gray-500"></i>
+                            Judul Tugas
+                        </label>
+                        <input type="text" id="assignment-title" required placeholder="Masukkan judul tugas" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-dark mb-2 flex items-center gap-2">
+                            <i data-lucide="align-left" class="icon text-gray-500"></i>
+                            Deskripsi Tugas
+                        </label>
+                        <textarea id="assignment-description" rows="4" required placeholder="Jelaskan detail tugas yang harus dikerjakan"
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-dark mb-2 flex items-center gap-2">
+                            <i data-lucide="calendar" class="icon text-gray-500"></i>
+                            Batas Waktu Pengumpulan
+                        </label>
+                        <input type="datetime-local" id="assignment-deadline" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-dark mb-2 flex items-center gap-2">
+                            <i data-lucide="book-open" class="icon text-gray-500"></i>
+                            Mata Pelajaran
+                        </label>
+                        <select id="assignment-subject" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                            <option value="">Pilih Mata Pelajaran</option>
+                            <option value="matematika">Matematika</option>
+                            <option value="bahasa-indonesia">Bahasa Indonesia</option>
+                            <option value="ipa">Ilmu Pengetahuan Alam</option>
+                            <option value="ips">Ilmu Pengetahuan Sosial</option>
+                            <option value="bahasa-inggris">Bahasa Inggris</option>
+                            <option value="pjok">PJOK</option>
+                            <option value="seni-budaya">Seni Budaya</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-dark mb-2 flex items-center gap-2">
+                            <i data-lucide="list" class="icon text-gray-500"></i>
+                            Tipe Tugas
+                        </label>
+                        <select id="assignment-type" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                            <option value="essay">Uraian/Essay</option>
+                            <option value="multiple_choice">Pilihan Ganda</option>
+                            <option value="file_upload">Mengumpulkan File</option>
+                            <option value="short_answer">Jawaban Singkat</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-dark mb-2 flex items-center gap-2">
+                            <i data-lucide="award" class="icon text-gray-500"></i>
+                            Nilai Maksimal
+                        </label>
+                        <input type="number" id="assignment-max-score" min="1" max="100" value="100" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                    </div>
+
+                    <!-- Container untuk multiple choice questions -->
+                    <div id="multiple-choice-section" class="hidden">
+                        <div class="border-t pt-6 mt-6">
+                            <h4 class="text-lg font-bold text-dark mb-4 flex items-center gap-2">
+                                <i data-lucide="list-checks" class="icon"></i>
+                                Soal Pilihan Ganda
+                            </h4>
+                            
+                            <div id="questions-container">
+                                <!-- Questions akan di-generate dinamis -->
+                            </div>
+                            
+                            <button type="button" id="add-question-btn" class="bg-secondary text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 transition-all duration-300 flex items-center gap-2 mt-4">
+                                <i data-lucide="plus" class="icon"></i>
+                                Tambah Soal
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 flex-wrap">
+                        <button type="submit" class="bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2">
+                            <i data-lucide="save" class="icon"></i>
+                            Simpan Tugas
+                        </button>
+                        <button type="button" id="cancel-assignment-btn" class="border-2 border-primary text-primary px-6 py-3 rounded-xl font-semibold hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2">
+                            <i data-lucide="x" class="icon"></i>
+                            Batal
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

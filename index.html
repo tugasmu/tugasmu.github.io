@@ -72,6 +72,56 @@
         .icon-xl {
             @apply w-8 h-8;
         }
+
+        /* Responsive design untuk navbar */
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            
+            nav {
+                gap: 0.5rem;
+            }
+            
+            .nav-link {
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+                font-size: 0.875rem;
+            }
+            
+            /* Sembunyikan teks pada mobile, tampilkan icon saja */
+            .nav-link span:not(.icon) {
+                display: none;
+            }
+            
+            .nav-link .icon {
+                margin-right: 0;
+            }
+        }
+
+        /* Smooth transitions */
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link.active {
+            color: #4361ee;
+            font-weight: 600;
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 2px;
+            background: #4361ee;
+            border-radius: 2px;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-500 to-purple-600 min-h-screen font-poppins">
@@ -81,58 +131,58 @@
     <!-- Header -->
     <header class="bg-white/95 backdrop-blur-lg shadow-lg sticky top-0 z-40 border-b border-gray-200">
         <div class="container mx-auto px-4">
-            <div class="flex flex-col md:flex-row justify-between items-center py-3 gap-3">
-                <!-- Logo -->
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center text-white font-bold shadow-lg">
-                        <i data-lucide="book-open" class="w-6 h-6"></i>
+            <div class="flex items-center justify-between py-3">
+                <!-- Logo Section -->
+                <div class="flex items-center gap-3 flex-shrink-0">
+                    <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center text-white font-bold shadow-lg">
+                        <i data-lucide="book-open" class="w-5 h-5"></i>
                     </div>
-                    <div>
-                        <span class="text-2xl font-bold text-dark bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Tugasmu</span>
+                    <div class="hidden sm:block">
+                        <span class="text-xl font-bold text-dark">Tugasmu</span>
                         <p class="text-xs text-gray-500 -mt-1">Sistem Pengumpulan Tugas</p>
                     </div>
                 </div>
 
-                <!-- Navigation -->
-                <nav class="flex flex-wrap justify-center gap-1 bg-gray-100/80 rounded-2xl p-1">
-                    <a href="#" class="nav-link px-5 py-2 rounded-xl font-medium text-dark hover:bg-primary hover:text-white transition-all duration-300 active flex items-center gap-2" data-page="home">
+                <!-- Navigation - Center -->
+                <nav class="flex items-center gap-1 mx-4">
+                    <a href="#" class="nav-link px-4 py-2 rounded-lg font-medium text-dark hover:bg-primary hover:text-white transition-all duration-300 active flex items-center gap-2 text-sm" data-page="home">
                         <i data-lucide="home" class="w-4 h-4"></i>
                         Beranda
                     </a>
-                    <a href="#" class="nav-link px-5 py-2 rounded-xl font-medium text-dark hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2" data-page="assignments">
+                    <a href="#" class="nav-link px-4 py-2 rounded-lg font-medium text-dark hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2 text-sm" data-page="assignments">
                         <i data-lucide="clipboard-list" class="w-4 h-4"></i>
                         Tugas
                     </a>
-                    <a href="#" class="nav-link px-5 py-2 rounded-xl font-medium text-dark hover:bg-primary hover:text-white transition-all duration-300 hidden items-center gap-2" id="admin-nav" data-page="admin">
+                    <a href="#" class="nav-link px-4 py-2 rounded-lg font-medium text-dark hover:bg-primary hover:text-white transition-all duration-300 hidden items-center gap-2 text-sm" id="admin-nav" data-page="admin">
                         <i data-lucide="settings" class="w-4 h-4"></i>
                         Admin
                     </a>
                 </nav>
 
-                <!-- Auth Buttons -->
-                <div class="flex items-center gap-3">
+                <!-- User Section - Right -->
+                <div class="flex items-center gap-3 flex-shrink-0">
                     <!-- User Info -->
-                    <div id="user-info" class="hidden flex-col md:flex-row items-center gap-3">
-                        <div class="flex items-center gap-3 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl px-4 py-2 border border-primary/20">
-                            <div class="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                    <div id="user-info" class="hidden items-center gap-3">
+                        <div class="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2 border">
+                            <div class="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold text-sm">
                                 <i data-lucide="user" class="w-4 h-4"></i>
                             </div>
-                            <div class="flex flex-col">
-                                <span id="user-name" class="font-semibold text-dark text-sm"></span>
-                                <span id="user-role" class="text-xs text-gray-500 capitalize"></span>
+                            <div class="hidden md:flex flex-col">
+                                <span id="user-name" class="font-semibold text-dark text-sm">Budi Santoso</span>
+                                <span class="text-xs text-gray-500">Guru</span>
                             </div>
                         </div>
-                        <button id="logout-btn" class="px-4 py-2 bg-gradient-to-r from-danger to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 text-sm flex items-center gap-2 shadow-md">
+                        <button id="logout-btn" class="px-3 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-all duration-300 text-sm flex items-center gap-2">
                             <i data-lucide="log-out" class="w-4 h-4"></i>
-                            Keluar
+                            <span class="hidden sm:inline">Keluar</span>
                         </button>
                     </div>
 
-                    <!-- Login Section -->
+                    <!-- Login Button -->
                     <div id="login-section">
-                        <button id="login-btn" class="px-6 py-2 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2 shadow-md">
+                        <button id="login-btn" class="px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2 text-sm">
                             <i data-lucide="log-in" class="w-4 h-4"></i>
-                            Masuk
+                            <span class="hidden sm:inline">Masuk</span>
                         </button>
                     </div>
                 </div>

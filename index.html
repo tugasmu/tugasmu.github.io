@@ -79,29 +79,32 @@
     <div id="alert-container" class="fixed bottom-4 right-4 z-50 space-y-2 max-w-sm"></div>
 
     <!-- Header -->
-    <header class="bg-white/95 backdrop-blur-lg shadow-lg sticky top-0 z-40">
+    <header class="bg-white/95 backdrop-blur-lg shadow-lg sticky top-0 z-40 border-b border-gray-200">
         <div class="container mx-auto px-4">
-            <div class="flex flex-col md:flex-row justify-between items-center py-4 gap-4">
+            <div class="flex flex-col md:flex-row justify-between items-center py-3 gap-3">
                 <!-- Logo -->
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold">
-                        <i data-lucide="book-open" class="icon-lg"></i>
+                    <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center text-white font-bold shadow-lg">
+                        <i data-lucide="book-open" class="w-6 h-6"></i>
                     </div>
-                    <span class="text-xl font-bold text-dark">Tugasmu</span>
+                    <div>
+                        <span class="text-2xl font-bold text-dark bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Tugasmu</span>
+                        <p class="text-xs text-gray-500 -mt-1">Sistem Pengumpulan Tugas</p>
+                    </div>
                 </div>
 
                 <!-- Navigation -->
-                <nav class="flex flex-wrap justify-center gap-2">
-                    <a href="#" class="nav-link px-4 py-2 rounded-lg font-medium text-dark hover:bg-primary hover:text-white transition-all duration-300 active flex items-center gap-2" data-page="home">
-                        <i data-lucide="home" class="icon"></i>
+                <nav class="flex flex-wrap justify-center gap-1 bg-gray-100/80 rounded-2xl p-1">
+                    <a href="#" class="nav-link px-5 py-2 rounded-xl font-medium text-dark hover:bg-primary hover:text-white transition-all duration-300 active flex items-center gap-2" data-page="home">
+                        <i data-lucide="home" class="w-4 h-4"></i>
                         Beranda
                     </a>
-                    <a href="#" class="nav-link px-4 py-2 rounded-lg font-medium text-dark hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2" data-page="assignments">
-                        <i data-lucide="clipboard-list" class="icon"></i>
+                    <a href="#" class="nav-link px-5 py-2 rounded-xl font-medium text-dark hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2" data-page="assignments">
+                        <i data-lucide="clipboard-list" class="w-4 h-4"></i>
                         Tugas
                     </a>
-                    <a href="#" class="nav-link px-4 py-2 rounded-lg font-medium text-dark hover:bg-primary hover:text-white transition-all duration-300 hidden items-center gap-2" id="admin-nav" data-page="admin">
-                        <i data-lucide="settings" class="icon"></i>
+                    <a href="#" class="nav-link px-5 py-2 rounded-xl font-medium text-dark hover:bg-primary hover:text-white transition-all duration-300 hidden items-center gap-2" id="admin-nav" data-page="admin">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
                         Admin
                     </a>
                 </nav>
@@ -110,20 +113,25 @@
                 <div class="flex items-center gap-3">
                     <!-- User Info -->
                     <div id="user-info" class="hidden flex-col md:flex-row items-center gap-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold text-sm">
-                            <i data-lucide="user" class="icon"></i>
+                        <div class="flex items-center gap-3 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl px-4 py-2 border border-primary/20">
+                            <div class="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                                <i data-lucide="user" class="w-4 h-4"></i>
+                            </div>
+                            <div class="flex flex-col">
+                                <span id="user-name" class="font-semibold text-dark text-sm"></span>
+                                <span id="user-role" class="text-xs text-gray-500 capitalize"></span>
+                            </div>
                         </div>
-                        <span id="user-name" class="font-medium text-dark"></span>
-                        <button id="logout-btn" class="px-4 py-2 border-2 border-primary text-primary rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 text-sm flex items-center gap-2">
-                            <i data-lucide="log-out" class="icon"></i>
+                        <button id="logout-btn" class="px-4 py-2 bg-gradient-to-r from-danger to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 text-sm flex items-center gap-2 shadow-md">
+                            <i data-lucide="log-out" class="w-4 h-4"></i>
                             Keluar
                         </button>
                     </div>
 
                     <!-- Login Section -->
                     <div id="login-section">
-                        <button id="login-btn" class="px-6 py-2 border-2 border-primary text-primary rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2">
-                            <i data-lucide="log-in" class="icon"></i>
+                        <button id="login-btn" class="px-6 py-2 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2 shadow-md">
+                            <i data-lucide="log-in" class="w-4 h-4"></i>
                             Masuk
                         </button>
                     </div>
@@ -785,8 +793,29 @@
             // Cek jika ada user yang sudah login (dari localStorage)
             const savedUser = localStorage.getItem('currentUser');
             if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                userRole = currentUser.role;
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    userRole = currentUser.role;
+                    
+                    // Verifikasi user masih valid
+                    const { data, error } = await supabase
+                        .from('users')
+                        .select('user_id')
+                        .eq('user_id', currentUser.id)
+                        .single();
+
+                    if (error || !data) {
+                        // User tidak valid, force logout
+                        localStorage.removeItem('currentUser');
+                        currentUser = null;
+                        userRole = null;
+                    }
+                } catch (error) {
+                    // Data corrupt, force logout
+                    localStorage.removeItem('currentUser');
+                    currentUser = null;
+                    userRole = null;
+                }
             }
             
             // Update UI berdasarkan status login
@@ -804,16 +833,21 @@
         function updateUI() {
             const loginSection = document.getElementById('login-section');
             const userInfo = document.getElementById('user-info');
+            const userName = document.getElementById('user-name');
+            const userRole = document.getElementById('user-role');
             
             if (currentUser) {
                 // User sudah login
                 loginSection.classList.add('hidden');
                 userInfo.classList.remove('hidden');
-                document.getElementById('user-name').textContent = currentUser.name;
+                userName.textContent = currentUser.name;
+                userRole.textContent = currentUser.role;
                 
                 // Tampilkan admin nav jika role admin
-                if (userRole === 'admin') {
+                if (currentUser.role === 'admin') {
                     adminNav.classList.remove('hidden');
+                } else {
+                    adminNav.classList.add('hidden');
                 }
             } else {
                 // User belum login
@@ -914,23 +948,35 @@
                         .select('*')
                         .eq('user_id', userid)
                         .eq('password', password)
-                        .eq('role', role)
-                        .single();
+                        .eq('role', role);
 
-                    if (error) throw error;
-                    if (!data) throw new Error('User tidak ditemukan');
+                    if (error) {
+                        console.error('Supabase error:', error);
+                        throw new Error('Terjadi kesalahan saat login');
+                    }
+                    
+                    if (!data || data.length === 0) {
+                        throw new Error('User ID atau password salah');
+                    }
 
+                    const userData = data[0];
+                    
+                    // Login berhasil
                     currentUser = {
-                        id: data.user_id,
-                        name: data.name,
-                        role: data.role
+                        id: userData.user_id,
+                        name: userData.name,
+                        role: userData.role
                     };
-                    userRole = data.role;
+                    userRole = userData.role;
                     
                     // Simpan ke localStorage
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
                     
+                    // Reset form dan tutup modal
+                    loginForm.reset();
                     authModal.classList.add('hidden');
+                    
+                    // Update UI
                     updateUI();
                     loadContentBasedOnRole();
                     
@@ -939,20 +985,33 @@
                     navLinks.forEach(nav => nav.classList.remove('active'));
                     document.querySelector(`[data-page="assignments"]`).classList.add('active');
                     
-                    showAlert('Login berhasil!', 'success');
+                    showAlert(`Login berhasil! Selamat datang ${userData.name}`, 'success');
+                    
                 } else {
                     throw new Error('Semua field harus diisi');
                 }
             } catch (error) {
+                console.error('Login error:', error);
                 showAlert('Login gagal: ' + error.message, 'error');
             }
         }
         
         // Fungsi untuk logout
         async function logout() {
+            // Hapus dari localStorage
+            localStorage.removeItem('currentUser');
+            
             currentUser = null;
             userRole = null;
+            
+            // Reset UI ke state awal
             updateUI();
+            
+            // Kembali ke halaman home
+            showPage('home');
+            navLinks.forEach(nav => nav.classList.remove('active'));
+            document.querySelector(`[data-page="home"]`).classList.add('active');
+            
             showAlert('Anda telah logout', 'info');
         }
         
@@ -965,13 +1024,33 @@
             const deadline = document.getElementById('assignment-deadline').value;
             const subject = document.getElementById('assignment-subject').value;
             const maxScore = document.getElementById('assignment-max-score').value;
+            const classId = document.getElementById('assignment-class').value;
             
             try {
+                // Insert ke Supabase
+                const { data, error } = await supabase
+                    .from('assignments')
+                    .insert([
+                        {
+                            title: title,
+                            description: description,
+                            deadline: deadline,
+                            subject: subject,
+                            max_score: parseInt(maxScore),
+                            created_by: currentUser.id,
+                            class_id: classId
+                        }
+                    ])
+                    .select();
+
+                if (error) throw error;
+
                 showAlert('Tugas berhasil dibuat!', 'success');
                 assignmentForm.reset();
                 createAssignmentForm.classList.add('hidden');
                 loadTeacherAssignments();
             } catch (error) {
+                console.error('Create assignment error:', error);
                 showAlert('Gagal membuat tugas: ' + error.message, 'error');
             }
         }
@@ -1001,20 +1080,73 @@
                 lucide.createIcons();
             }, 1000);
         }
+
+        // Fungsi untuk menghapus tugas
+        async function deleteAssignment(assignmentId) {
+            if (!confirm('Apakah Anda yakin ingin menghapus tugas ini?')) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('assignments')
+                    .delete()
+                    .eq('id', assignmentId);
+
+                if (error) throw error;
+
+                showAlert('Tugas berhasil dihapus!', 'success');
+                loadTeacherAssignments(); // Refresh list
+            } catch (error) {
+                console.error('Delete assignment error:', error);
+                showAlert('Gagal menghapus tugas', 'error');
+            }
+        }
         
         // Fungsi untuk memuat tugas guru
         async function loadTeacherAssignments() {
             teacherAssignmentsList.innerHTML = '<div class="bg-white rounded-xl p-6 text-center shadow-lg border"><i data-lucide="loader" class="w-8 h-8 text-gray-400 mx-auto mb-3 animate-spin"></i><p class="text-gray-600">Memuat daftar tugas...</p></div>';
             lucide.createIcons();
             
-            setTimeout(() => {
-                teacherAssignmentsList.innerHTML = `
-                    <div class="bg-white rounded-xl p-6 shadow-lg border hover:shadow-xl transition-all duration-300 border-l-4 border-primary">
-                        <h3 class="text-xl font-bold text-dark mb-3">Matematika - Persamaan Kuadrat</h3>
-                        <p class="text-gray-600 mb-4">Selesaikan soal-soal persamaan kuadrat pada halaman 45-46.</p>
+            try {
+                // Get assignments from Supabase
+                const { data: assignments, error } = await supabase
+                    .from('assignments')
+                    .select('*')
+                    .eq('created_by', currentUser.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (assignments.length === 0) {
+                    teacherAssignmentsList.innerHTML = `
+                        <div class="bg-white rounded-xl p-8 text-center shadow-lg border">
+                            <i data-lucide="clipboard-list" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+                            <p class="text-gray-600 mb-4">Belum ada tugas yang dibuat</p>
+                            <button id="create-first-assignment" class="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300">
+                                Buat Tugas Pertama
+                            </button>
+                        </div>
+                    `;
+                    document.getElementById('create-first-assignment').addEventListener('click', () => {
+                        createAssignmentForm.classList.remove('hidden');
+                    });
+                    lucide.createIcons();
+                    return;
+                }
+
+                // Render assignments
+                teacherAssignmentsList.innerHTML = assignments.map(assignment => `
+                    <div class="bg-white rounded-xl p-6 shadow-lg border hover:shadow-xl transition-all duration-300 border-l-4 border-primary mb-4">
+                        <h3 class="text-xl font-bold text-dark mb-3">${assignment.subject} - ${assignment.title}</h3>
+                        <p class="text-gray-600 mb-4">${assignment.description}</p>
                         <div class="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
-                            <span class="flex items-center gap-1"><i data-lucide="calendar" class="icon"></i> Batas: 25 Des 2023, 23:59</span>
-                            <span class="flex items-center gap-1"><i data-lucide="users" class="icon"></i> 15/30 siswa</span>
+                            <span class="flex items-center gap-1">
+                                <i data-lucide="calendar" class="icon"></i> 
+                                Batas: ${new Date(assignment.deadline).toLocaleDateString('id-ID')}
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <i data-lucide="award" class="icon"></i>
+                                Nilai Maks: ${assignment.max_score}
+                            </span>
                         </div>
                         <div class="flex gap-3 flex-wrap">
                             <button class="bg-secondary text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 transition-all duration-300 text-sm flex items-center gap-2">
@@ -1025,15 +1157,54 @@
                                 <i data-lucide="edit" class="icon"></i>
                                 Edit
                             </button>
-                            <button class="border-2 border-danger text-danger px-4 py-2 rounded-lg font-semibold hover:bg-danger hover:text-white transition-all duration-300 text-sm flex items-center gap-2">
+                            <button class="border-2 border-danger text-danger px-4 py-2 rounded-lg font-semibold hover:bg-danger hover:text-white transition-all duration-300 text-sm flex items-center gap-2" onclick="deleteAssignment('${assignment.id}')">
                                 <i data-lucide="trash-2" class="icon"></i>
                                 Hapus
                             </button>
                         </div>
                     </div>
+                `).join('');
+                
+                lucide.createIcons();
+            } catch (error) {
+                console.error('Load assignments error:', error);
+                teacherAssignmentsList.innerHTML = `
+                    <div class="bg-white rounded-xl p-6 text-center shadow-lg border">
+                        <i data-lucide="alert-circle" class="w-8 h-8 text-red-500 mx-auto mb-3"></i>
+                        <p class="text-gray-600">Gagal memuat daftar tugas</p>
+                    </div>
                 `;
                 lucide.createIcons();
-            }, 1000);
+            }
+        }
+
+        async function loadTeacherClasses() {
+            try {
+                const { data, error } = await supabase
+                    .from('classes')
+                    .select('*')
+                    .eq('teacher_id', currentUser.id);
+
+                if (error) throw error;
+                return data || [];
+            } catch (error) {
+                console.error('Load classes error:', error);
+                return [];
+            }
+        }
+
+        async function showCreateAssignmentForm() {
+            // Load classes dulu
+            const classes = await loadTeacherClasses();
+            
+            const classSelect = document.getElementById('assignment-class');
+            classSelect.innerHTML = '<option value="">Pilih Kelas</option>';
+            
+            classes.forEach(classItem => {
+                classSelect.innerHTML += `<option value="${classItem.id}">${classItem.name} - ${classItem.grade}</option>`;
+            });
+            
+            createAssignmentForm.classList.remove('hidden');
         }
         
         // Fungsi untuk memuat data pengguna (admin)

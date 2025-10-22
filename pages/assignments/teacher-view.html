@@ -1,0 +1,24 @@
+<div id="teacher-view">
+    <h2 class="text-2xl font-bold text-dark mb-6 flex items-center gap-2">
+        <i data-lucide="user-check" class="icon-lg"></i>
+        Manajemen Tugas
+    </h2>
+    
+    <div class="flex gap-4 mb-6 flex-wrap">
+        <button id="create-assignment-btn" class="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2">
+            <i data-lucide="plus" class="icon"></i>
+            Buat Tugas Baru
+        </button>
+        <button id="refresh-teacher-assignments-btn" class="border-2 border-primary text-primary px-6 py-2 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2">
+            <i data-lucide="refresh-cw" class="icon"></i>
+            Refresh
+        </button>
+    </div>
+    
+    <div id="teacher-assignments-list">
+        <div class="bg-white rounded-xl p-6 text-center shadow-lg border">
+            <i data-lucide="loader" class="w-8 h-8 text-gray-400 mx-auto mb-3 animate-spin"></i>
+            <p class="text-gray-600">Memuat daftar tugas...</p>
+        </div>
+    </div>
+</div>

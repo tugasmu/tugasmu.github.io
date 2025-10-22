@@ -1,0 +1,35 @@
+<div class="admin-tab-content active" id="users-tab">
+    <div class="flex gap-4 mb-6 flex-wrap">
+        <button id="add-user-btn" class="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2">
+            <i data-lucide="user-plus" class="icon"></i>
+            Tambah Pengguna
+        </button>
+        <button id="refresh-users-btn" class="border-2 border-primary text-primary px-6 py-2 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2">
+            <i data-lucide="refresh-cw" class="icon"></i>
+            Refresh Data
+        </button>
+    </div>
+    
+    <div class="overflow-x-auto rounded-xl shadow-lg border">
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Peran</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="users-table-body" class="bg-white divide-y divide-gray-200">
+                <tr>
+                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                        <i data-lucide="loader" class="w-6 h-6 text-gray-400 mx-auto mb-2 animate-spin"></i>
+                        Memuat data pengguna...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -626,39 +626,45 @@
 
         // Fungsi inisialisasi aplikasi
         async function initApp() {
-            //Untuk demo, kita skip auth dan langsung set sebagai admin
-            //currentUser = {
-            //    id: 'ADM-001',
-            //    name: 'Developer',
-            //    role: 'admin'
-            //};
-            //userRole = 'admin';
-            updateUI();
-            loadContentBasedOnRole();
-            loadStats();
             
-            showAlert('Selamat datang di Tugasmu!', 'success');
+            // Cek jika ada user yang sudah login (dari localStorage)
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                userRole = currentUser.role;
+            }
+            
+            // Update UI berdasarkan status login
+            updateUI();
+            
+            // Jika user sudah login, load content sesuai role
+            if (currentUser) {
+                loadContentBasedOnRole();
+                loadStats();
+                showAlert(`Selamat datang kembali, ${currentUser.name}!`, 'success');
+            } else {
+                // Tampilkan UI untuk login
+                showAuthModal(); // atau biarkan halaman default
+            }
         }
         
         // Fungsi untuk memperbarui UI berdasarkan status login
         function updateUI() {
-            if (currentUser) {
-                loginSection.classList.add('hidden');
-                userInfo.classList.remove('hidden');
-                userName.textContent = currentUser.name;
-                userAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
-                
-                // Tampilkan menu admin hanya untuk administrator
-                if (userRole === 'admin') {
-                    adminNav.classList.remove('hidden');
-                } else {
-                    adminNav.classList.add('hidden');
-                }
-            } else {
-                loginSection.classList.remove('hidden');
-                userInfo.classList.add('hidden');
-                adminNav.classList.add('hidden');
-                showPage('home');
+            const userInfoElement = document.getElementById('userInfo');
+            const loginBtn = document.getElementById('loginBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            
+            // Null check semua elemen
+            if (userInfoElement) {
+                userInfoElement.textContent = currentUser ? currentUser.name : 'Guest';
+            }
+            
+            if (loginBtn) {
+                loginBtn.style.display = currentUser ? 'none' : 'block';
+            }
+            
+            if (logoutBtn) {
+                logoutBtn.style.display = currentUser ? 'block' : 'none';
             }
         }
         

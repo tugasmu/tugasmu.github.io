@@ -898,7 +898,7 @@
             lucide.createIcons();
         }
         
-        // Fungsi untuk login
+        // Fungsi untuk login dengan Supabase
         async function login(e) {
             e.preventDefault();
             
@@ -908,48 +908,38 @@
             
             try {
                 if (userid && password && role) {
-                    // Validasi credentials (contoh sederhana)
-                    let isValid = false;
-                    let userName = '';
+                    // Gunakan Supabase untuk autentikasi
+                    const { data, error } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('user_id', userid)
+                        .eq('password', password)
+                        .eq('role', role)
+                        .single();
+
+                    if (error) throw error;
+                    if (!data) throw new Error('User tidak ditemukan');
+
+                    currentUser = {
+                        id: data.user_id,
+                        name: data.name,
+                        role: data.role
+                    };
+                    userRole = data.role;
                     
-                    if (role === 'admin') {
-                        // Admin credentials
-                        if (userid === 'admin' && password === 'admin123') {
-                            isValid = true;
-                            userName = 'Developer';
-                        }
-                    } else if (role === 'teacher') {
-                        // Teacher credentials - format: guru001, guru002, etc.
-                        if (userid.startsWith('guru') && password === 'guru123') {
-                            isValid = true;
-                            userName = 'Guru ' + userid.replace('guru', '');
-                        }
-                    }
+                    // Simpan ke localStorage
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
                     
-                    if (isValid) {
-                        currentUser = {
-                            id: userid,
-                            name: userName,
-                            role: role
-                        };
-                        userRole = role;
-                        
-                        // Simpan ke localStorage
-                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                        
-                        authModal.classList.add('hidden');
-                        updateUI();
-                        loadContentBasedOnRole();
-                        
-                        // Redirect ke halaman assignments setelah login
-                        showPage('assignments');
-                        navLinks.forEach(nav => nav.classList.remove('active'));
-                        document.querySelector(`[data-page="assignments"]`).classList.add('active');
-                        
-                        showAlert('Login berhasil!', 'success');
-                    } else {
-                        throw new Error('User ID atau password salah');
-                    }
+                    authModal.classList.add('hidden');
+                    updateUI();
+                    loadContentBasedOnRole();
+                    
+                    // Redirect ke halaman assignments setelah login
+                    showPage('assignments');
+                    navLinks.forEach(nav => nav.classList.remove('active'));
+                    document.querySelector(`[data-page="assignments"]`).classList.add('active');
+                    
+                    showAlert('Login berhasil!', 'success');
                 } else {
                     throw new Error('Semua field harus diisi');
                 }

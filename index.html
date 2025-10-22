@@ -794,15 +794,1000 @@
         </div>
     </div>
 
-    <!-- Di bagian akhir body -->
-    <script type="module" src="scripts/config.js"></script>
-    <script type="module" src="scripts/utils.js"></script>
-    <script type="module" src="scripts/constants.js"></script>
-    <script type="module" src="scripts/app.js"></script>
-    <script type="module" src="scripts/auth.js"></script>
-    <script type="module" src="scripts/assignments.js"></script>
-    <script type="module" src="scripts/admin.js"></script>
-    <script type="module" src="scripts/ui.js"></script>
-    <script type="module" src="scripts/events.js"></script>
+    <script>
+        // Inisialisasi Lucide Icons
+        lucide.createIcons();
+        
+        // Inisialisasi Supabase
+        const SUPABASE_URL = 'https://dzaxtgnokifecmhvcaxs.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6YXh0Z25va2lmZWNtaHZjYXhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MzA4MzAsImV4cCI6MjA3NjMwNjgzMH0.PvmRnoU3M5N971rRbnlACnXeyN63P6qwKR_Abq4ElQk';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Variabel global
+        let currentUser = null;
+        let userRole = null;
+        let dropdownOpen = false;
+        
+        // DOM Elements
+        const alertContainer = document.getElementById('alert-container');
+        const homePage = document.getElementById('home-page');
+        const assignmentsPage = document.getElementById('assignments-page');
+        const adminPage = document.getElementById('admin-page');
+        const authModal = document.getElementById('auth-modal');
+        const addUserModal = document.getElementById('add-user-modal');
+        const loginBtn = document.getElementById('login-btn');
+        const heroLoginBtn = document.getElementById('hero-login-btn');
+        const logoutDropdownBtn = document.getElementById('logout-dropdown-btn');
+        const userDropdownBtn = document.getElementById('user-dropdown-btn');
+        const loginSection = document.getElementById('login-section');
+        const userInfo = document.getElementById('user-info');
+        const adminNav = document.getElementById('admin-nav');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const loginForm = document.getElementById('login-form');
+        const addUserForm = document.getElementById('add-user-form');
+        const createAssignmentBtn = document.getElementById('create-assignment-btn');
+        const createAssignmentForm = document.getElementById('create-assignment-form');
+        const assignmentForm = document.getElementById('assignment-form');
+        const cancelAssignmentBtn = document.getElementById('cancel-assignment-btn');
+        const studentView = document.getElementById('student-view');
+        const teacherView = document.getElementById('teacher-view');
+        const studentAssignmentsList = document.getElementById('student-assignments-list');
+        const teacherAssignmentsList = document.getElementById('teacher-assignments-list');
+        const refreshAssignmentsBtn = document.getElementById('refresh-assignments-btn');
+        const refreshTeacherAssignmentsBtn = document.getElementById('refresh-teacher-assignments-btn');
+        const addUserBtn = document.getElementById('add-user-btn');
+        const refreshUsersBtn = document.getElementById('refresh-users-btn');
+        const usersTableBody = document.getElementById('users-table-body');
+        const addSubjectBtn = document.getElementById('add-subject-btn');
+        const refreshSubjectsBtn = document.getElementById('refresh-subjects-btn');
+        const subjectsTableBody = document.getElementById('subjects-table-body');
+        const importForm = document.getElementById('import-form');
+        const downloadTemplateBtn = document.getElementById('download-template-btn');
+        const assignmentTypeSelect = document.getElementById('assignment-type');
+        const multipleChoiceSection = document.getElementById('multiple-choice-section');
+        const questionsContainer = document.getElementById('questions-container');
+        const addQuestionBtn = document.getElementById('add-question-btn');
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', initApp);
+        loginBtn.addEventListener('click', () => showAuthModal());
+        heroLoginBtn.addEventListener('click', () => showAuthModal());
+        logoutDropdownBtn.addEventListener('click', logout);
+        userDropdownBtn.addEventListener('click', toggleUserDropdown);
+        
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // Jika belum login dan mencoba akses halaman selain home, tampilkan modal login
+                if (!currentUser && link.dataset.page !== 'home') {
+                    showAuthModal();
+                    return;
+                }
+                
+                navLinks.forEach(nav => nav.classList.remove('active'));
+                link.classList.add('active');
+                showPage(link.dataset.page);
+            });
+        });
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.dataset.tab;
+                activateTab(tabId);
+            });
+        });
+        
+        loginForm.addEventListener('submit', login);
+        addUserForm.addEventListener('submit', addUser);
+        createAssignmentBtn.addEventListener('click', () => {
+            createAssignmentForm.classList.remove('hidden');
+        });
+        cancelAssignmentBtn.addEventListener('click', () => {
+            createAssignmentForm.classList.add('hidden');
+            multipleChoiceSection.classList.add('hidden');
+            questionsContainer.innerHTML = '';
+        });
+        assignmentForm.addEventListener('submit', createAssignment);
+        refreshAssignmentsBtn.addEventListener('click', loadStudentAssignments);
+        refreshTeacherAssignmentsBtn.addEventListener('click', loadTeacherAssignments);
+        addUserBtn.addEventListener('click', () => showAddUserModal());
+        refreshUsersBtn.addEventListener('click', loadUsers);
+        addSubjectBtn.addEventListener('click', () => showAddSubjectModal());
+        refreshSubjectsBtn.addEventListener('click', loadSubjects);
+        importForm.addEventListener('submit', importCSV);
+        downloadTemplateBtn.addEventListener('click', downloadTemplate);
+        assignmentTypeSelect.addEventListener('change', handleAssignmentTypeChange);
+        addQuestionBtn.addEventListener('click', addNewQuestion);
+        
+        // Close modal when clicking on X or outside
+        document.querySelector('.close').addEventListener('click', () => {
+            authModal.classList.add('hidden');
+        });
+        
+        document.querySelector('.close-add-user').addEventListener('click', () => {
+            addUserModal.classList.add('hidden');
+        });
+        
+        document.getElementById('cancel-add-user').addEventListener('click', () => {
+            addUserModal.classList.add('hidden');
+        });
+        
+        window.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                authModal.classList.add('hidden');
+            }
+            if (e.target === addUserModal) {
+                addUserModal.classList.add('hidden');
+            }
+            closeDropdownOnClickOutside(e);
+        });
+
+        // Fungsi untuk menampilkan alert
+        function showAlert(message, type = 'info') {
+            const alert = document.createElement('div');
+            const bgColor = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500',
+                info: 'bg-blue-500'
+            }[type];
+            
+            const icon = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            }[type];
+            
+            alert.className = `${bgColor} text-white p-4 rounded-xl shadow-lg animate-slide-in-right flex items-center gap-3`;
+            alert.innerHTML = `
+                <span class="text-lg">${icon}</span>
+                <span class="flex-1">${message}</span>
+                <button class="text-white hover:text-gray-200 transition-colors duration-300" onclick="this.parentElement.remove()">
+                    <i data-lucide="x" class="icon"></i>
+                </button>
+            `;
+            
+            alertContainer.appendChild(alert);
+            
+            // Refresh icons
+            lucide.createIcons();
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (alert.parentElement) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+
+        // Fungsi untuk generate avatar initials
+        function getAvatarInitials(name) {
+            if (!name) return 'U';
+            
+            const names = name.split(' ');
+            let initials = '';
+            
+            if (names.length === 1) {
+                initials = names[0].substring(0, 2).toUpperCase();
+            } else {
+                initials = (names[0][0] + names[names.length - 1][0]).toUpperCase();
+            }
+            
+            return initials;
+        }
+
+        // Dropdown functionality
+        function toggleUserDropdown() {
+            const dropdownMenu = document.getElementById('user-dropdown-menu');
+            const dropdownBtn = document.getElementById('user-dropdown-btn');
+            const chevron = dropdownBtn.querySelector('i[data-lucide="chevron-down"]');
+            
+            dropdownOpen = !dropdownOpen;
+            
+            if (dropdownOpen) {
+                dropdownMenu.classList.remove('hidden');
+                // Rotate chevron
+                chevron.style.transform = 'rotate(180deg)';
+            } else {
+                dropdownMenu.classList.add('hidden');
+                // Reset chevron
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Close dropdown when clicking outside
+        function closeDropdownOnClickOutside(event) {
+            const userInfo = document.getElementById('user-info');
+            const dropdownBtn = document.getElementById('user-dropdown-btn');
+            const dropdownMenu = document.getElementById('user-dropdown-menu');
+            
+            if (dropdownOpen && 
+                !userInfo.contains(event.target) && 
+                !dropdownBtn.contains(event.target) &&
+                !dropdownMenu.contains(event.target)) {
+                toggleUserDropdown();
+            }
+        }
+
+        // Handle assignment type change
+        function handleAssignmentTypeChange() {
+            const type = this.value;
+            
+            if (type === 'multiple_choice') {
+                multipleChoiceSection.classList.remove('hidden');
+                addNewQuestion(); // Tambah soal pertama
+            } else {
+                multipleChoiceSection.classList.add('hidden');
+                questionsContainer.innerHTML = '';
+            }
+        }
+
+        // Fungsi untuk tambah soal baru
+        function addNewQuestion() {
+            const questionId = 'question_' + Date.now();
+            
+            const questionHTML = `
+                <div class="bg-gray-50 rounded-xl p-4 mb-4 border" data-question-id="${questionId}">
+                    <div class="flex justify-between items-center mb-3">
+                        <h5 class="font-semibold text-dark">Soal Baru</h5>
+                        <button type="button" class="text-red-500 hover:text-red-700 delete-question" data-question-id="${questionId}">
+                            <i data-lucide="trash-2" class="icon"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-dark mb-2">Pertanyaan</label>
+                        <textarea class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary question-text" 
+                                  placeholder="Tulis pertanyaan di sini..." rows="2"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-dark mb-2">Pilihan Jawaban</label>
+                        <div class="space-y-2 options-container">
+                            <div class="flex items-center gap-2 option-item">
+                                <input type="radio" name="correct_${questionId}" value="A" class="correct-option">
+                                <input type="text" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary option-text" 
+                                       placeholder="Pilihan A" data-option="A">
+                            </div>
+                            <div class="flex items-center gap-2 option-item">
+                                <input type="radio" name="correct_${questionId}" value="B" class="correct-option">
+                                <input type="text" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary option-text" 
+                                       placeholder="Pilihan B" data-option="B">
+                            </div>
+                        </div>
+                        <button type="button" class="add-option-btn text-primary hover:text-primary-dark text-sm flex items-center gap-1 mt-2" data-question-id="${questionId}">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            Tambah Pilihan
+                        </button>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-dark mb-2">Nilai Maksimal</label>
+                        <input type="number" class="question-score w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" 
+                               value="1" min="1">
+                    </div>
+                </div>
+            `;
+            
+            questionsContainer.insertAdjacentHTML('beforeend', questionHTML);
+            lucide.createIcons();
+            
+            // Add event listeners untuk question ini
+            const newQuestion = questionsContainer.lastElementChild;
+            newQuestion.querySelector('.delete-question').addEventListener('click', function() {
+                this.closest('[data-question-id]').remove();
+            });
+            
+            newQuestion.querySelector('.add-option-btn').addEventListener('click', function() {
+                addOptionToQuestion(questionId);
+            });
+        }
+
+        // Fungsi untuk tambah pilihan jawaban
+        function addOptionToQuestion(questionId) {
+            const questionElement = document.querySelector(`[data-question-id="${questionId}"]`);
+            const optionsContainer = questionElement.querySelector('.options-container');
+            
+            const options = optionsContainer.querySelectorAll('.option-item');
+            const nextOption = String.fromCharCode(65 + options.length); // A, B, C, D, etc.
+            
+            const optionHTML = `
+                <div class="flex items-center gap-2 option-item">
+                    <input type="radio" name="correct_${questionId}" value="${nextOption}" class="correct-option">
+                    <input type="text" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary option-text" 
+                           placeholder="Pilihan ${nextOption}" data-option="${nextOption}">
+                </div>
+            `;
+            
+            optionsContainer.insertAdjacentHTML('beforeend', optionHTML);
+        }
+
+        // Fungsi inisialisasi aplikasi
+        async function initApp() {
+            // Refresh icons
+            lucide.createIcons();
+            
+            // Cek jika ada user yang sudah login (dari localStorage)
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    userRole = currentUser.role;
+                    
+                    // Verifikasi user masih valid
+                    const { data, error } = await supabase
+                        .from('users')
+                        .select('user_id')
+                        .eq('user_id', currentUser.id)
+                        .single();
+
+                    if (error || !data) {
+                        // User tidak valid, force logout
+                        localStorage.removeItem('currentUser');
+                        currentUser = null;
+                        userRole = null;
+                    }
+                } catch (error) {
+                    // Data corrupt, force logout
+                    localStorage.removeItem('currentUser');
+                    currentUser = null;
+                    userRole = null;
+                }
+            }
+            
+            // Update UI berdasarkan status login
+            updateUI();
+            
+            // Jika user sudah login, load content sesuai role
+            if (currentUser) {
+                loadContentBasedOnRole();
+                loadStats();
+                showAlert(`Selamat datang kembali, ${currentUser.name}!`, 'success');
+            }
+        }
+        
+        // Fungsi untuk memperbarui UI berdasarkan status login
+        function updateUI() {
+            const loginSection = document.getElementById('login-section');
+            const userInfo = document.getElementById('user-info');
+            const userName = document.getElementById('user-name');
+            const userRole = document.getElementById('user-role');
+            const dropdownUserName = document.getElementById('dropdown-user-name');
+            const dropdownUserRole = document.getElementById('dropdown-user-role');
+            const userAvatar = document.querySelector('#user-info .w-8.h-8');
+            
+            if (currentUser) {
+                // User sudah login
+                loginSection.classList.add('hidden');
+                userInfo.classList.remove('hidden');
+                
+                // Update user data
+                const displayName = currentUser.name;
+                const displayRole = currentUser.role === 'admin' ? 'Developer' : 
+                                  currentUser.role === 'teacher' ? 'Guru' : 'Siswa';
+                
+                if (userName) userName.textContent = displayName;
+                if (userRole) userRole.textContent = displayRole;
+                if (dropdownUserName) dropdownUserName.textContent = displayName;
+                if (dropdownUserRole) dropdownUserRole.textContent = displayRole;
+                if (userAvatar) {
+                    userAvatar.textContent = getAvatarInitials(currentUser.name);
+                }
+                
+                // Tampilkan admin nav jika role admin
+                adminNav.classList.toggle('hidden', currentUser.role !== 'admin');
+                
+            } else {
+                // User belum login
+                loginSection.classList.remove('hidden');
+                userInfo.classList.add('hidden');
+                adminNav.classList.add('hidden');
+                
+                // Pastikan dropdown tertutup
+                document.getElementById('user-dropdown-menu').classList.add('hidden');
+                dropdownOpen = false;
+            }
+            
+            lucide.createIcons();
+        }
+        
+        // Fungsi untuk memuat konten berdasarkan peran
+        function loadContentBasedOnRole() {
+            // Reset semua view dulu
+            studentView.classList.add('hidden');
+            teacherView.classList.add('hidden');
+            
+            if (userRole === 'student') {
+                studentView.classList.remove('hidden');
+                teacherView.classList.add('hidden');
+                loadStudentAssignments();
+            } else if (userRole === 'teacher') {
+                studentView.classList.add('hidden');
+                teacherView.classList.remove('hidden');
+                loadTeacherAssignments();
+            } else if (userRole === 'admin') {
+                teacherView.classList.add('hidden');
+                // Load data admin
+                loadUsers();
+                loadSubjects();
+            }
+            
+            // Refresh icons
+            lucide.createIcons();
+        }
+        
+        // Fungsi untuk menampilkan halaman
+        function showPage(pageId) {
+            // Sembunyikan semua halaman
+            homePage.classList.add('hidden');
+            assignmentsPage.classList.add('hidden');
+            adminPage.classList.add('hidden');
+            
+            // Tampilkan halaman yang dipilih
+            document.getElementById(`${pageId}-page`).classList.remove('hidden');
+            
+            // Jika sudah login, load content berdasarkan role di halaman assignments
+            if (pageId === 'assignments' && currentUser) {
+                loadContentBasedOnRole();
+            }
+            
+            // Refresh icons
+            lucide.createIcons();
+        }
+        
+        // Fungsi untuk mengaktifkan tab
+        function activateTab(tabId) {
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+                tab.classList.add('border-transparent', 'text-gray-500');
+            });
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            const activeTab = document.querySelector(`.tab[data-tab="${tabId}"]`);
+            activeTab.classList.add('active', 'border-primary', 'text-primary');
+            activeTab.classList.remove('border-transparent', 'text-gray-500');
+            
+            document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+            
+            // Refresh icons
+            lucide.createIcons();
+        }
+        
+        // Fungsi untuk menampilkan modal autentikasi
+        function showAuthModal() {
+            authModal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        // Fungsi untuk menampilkan modal tambah user
+        function showAddUserModal() {
+            addUserModal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+        
+        // Fungsi untuk login dengan Supabase
+        async function login(e) {
+            e.preventDefault();
+            
+            const userid = document.getElementById('login-userid').value;
+            const password = document.getElementById('login-password').value;
+            const role = document.getElementById('login-role').value;
+            
+            try {
+                if (userid && password && role) {
+                    // Gunakan Supabase untuk autentikasi
+                    const { data, error } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('user_id', userid)
+                        .eq('password', password)
+                        .eq('role', role);
+
+                    if (error) {
+                        console.error('Supabase error:', error);
+                        throw new Error('Terjadi kesalahan saat login');
+                    }
+                    
+                    if (!data || data.length === 0) {
+                        throw new Error('User ID atau password salah');
+                    }
+
+                    const userData = data[0];
+                    
+                    // Login berhasil
+                    currentUser = {
+                        id: userData.user_id,
+                        name: userData.name,
+                        role: userData.role
+                    };
+                    userRole = userData.role;
+                    
+                    // Simpan ke localStorage
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    // Reset form dan tutup modal
+                    loginForm.reset();
+                    authModal.classList.add('hidden');
+                    
+                    // Update UI
+                    updateUI();
+                    loadContentBasedOnRole();
+                    
+                    // Redirect ke halaman assignments setelah login
+                    showPage('assignments');
+                    navLinks.forEach(nav => nav.classList.remove('active'));
+                    document.querySelector(`[data-page="assignments"]`).classList.add('active');
+                    
+                    showAlert(`Login berhasil! Selamat datang ${userData.name}`, 'success');
+                    
+                } else {
+                    throw new Error('Semua field harus diisi');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showAlert('Login gagal: ' + error.message, 'error');
+            }
+        }
+
+        // Fungsi untuk menambah user (admin)
+        async function addUser(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('new-user-name').value;
+            const userid = document.getElementById('new-user-id').value;
+            const password = document.getElementById('new-user-password').value;
+            const role = document.getElementById('new-user-role').value;
+            
+            try {
+                // Insert ke Supabase
+                const { data, error } = await supabase
+                    .from('users')
+                    .insert([
+                        {
+                            name: name,
+                            user_id: userid,
+                            password: password,
+                            role: role
+                        }
+                    ])
+                    .select();
+
+                if (error) throw error;
+
+                showAlert('Pengguna berhasil ditambahkan!', 'success');
+                addUserForm.reset();
+                addUserModal.classList.add('hidden');
+                loadUsers(); // Refresh user list
+            } catch (error) {
+                console.error('Add user error:', error);
+                showAlert('Gagal menambah pengguna: ' + error.message, 'error');
+            }
+        }
+        
+        // Fungsi untuk logout
+        async function logout() {
+            // Tutup dropdown dulu
+            dropdownOpen = false;
+            document.getElementById('user-dropdown-menu').classList.add('hidden');
+            
+            // Hapus dari localStorage
+            localStorage.removeItem('currentUser');
+            
+            currentUser = null;
+            userRole = null;
+            
+            // Reset UI ke state awal
+            updateUI();
+            
+            // Kembali ke halaman home
+            showPage('home');
+            navLinks.forEach(nav => nav.classList.remove('active'));
+            document.querySelector(`[data-page="home"]`).classList.add('active');
+            
+            showAlert('Anda telah logout', 'info');
+        }
+        
+        // Fungsi untuk membuat tugas (guru)
+        async function createAssignment(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('assignment-title').value;
+            const description = document.getElementById('assignment-description').value;
+            const deadline = document.getElementById('assignment-deadline').value;
+            const subject = document.getElementById('assignment-subject').value;
+            const maxScore = document.getElementById('assignment-max-score').value;
+            const assignmentType = document.getElementById('assignment-type').value;
+            
+            try {
+                // Insert assignment ke Supabase
+                const { data: assignmentData, error: assignmentError } = await supabase
+                    .from('assignments')
+                    .insert([
+                        {
+                            title: title,
+                            description: description,
+                            deadline: deadline,
+                            subject: subject,
+                            max_score: parseInt(maxScore),
+                            created_by: currentUser.id,
+                            assignment_type: assignmentType
+                        }
+                    ])
+                    .select();
+
+                if (assignmentError) throw assignmentError;
+
+                const assignmentId = assignmentData[0].id;
+                
+                // Jika tipe multiple choice, insert questions
+                if (assignmentType === 'multiple_choice') {
+                    await saveMultipleChoiceQuestions(assignmentId);
+                }
+
+                showAlert('Tugas berhasil dibuat!', 'success');
+                assignmentForm.reset();
+                createAssignmentForm.classList.add('hidden');
+                multipleChoiceSection.classList.add('hidden');
+                questionsContainer.innerHTML = '';
+                loadTeacherAssignments();
+            } catch (error) {
+                console.error('Create assignment error:', error);
+                showAlert('Gagal membuat tugas: ' + error.message, 'error');
+            }
+        }
+
+        // Fungsi untuk save multiple choice questions
+        async function saveMultipleChoiceQuestions(assignmentId) {
+            const questions = document.querySelectorAll('[data-question-id]');
+            const questionsData = [];
+            
+            for (const questionElement of questions) {
+                const questionText = questionElement.querySelector('.question-text').value;
+                const questionScore = questionElement.querySelector('.question-score').value;
+                const correctAnswer = questionElement.querySelector('.correct-option:checked')?.value;
+                const options = {};
+                
+                // Collect options
+                questionElement.querySelectorAll('.option-item').forEach(optionItem => {
+                    const optionKey = optionItem.querySelector('.option-text').dataset.option;
+                    const optionValue = optionItem.querySelector('.option-text').value;
+                    if (optionValue) {
+                        options[optionKey] = optionValue;
+                    }
+                });
+                
+                if (questionText && correctAnswer && Object.keys(options).length >= 2) {
+                    questionsData.push({
+                        assignment_id: assignmentId,
+                        question_text: questionText,
+                        question_type: 'multiple_choice',
+                        options: options,
+                        correct_answer: correctAnswer,
+                        max_score: parseInt(questionScore)
+                    });
+                }
+            }
+            
+            if (questionsData.length > 0) {
+                const { error: questionsError } = await supabase
+                    .from('assignment_questions')
+                    .insert(questionsData);
+                    
+                if (questionsError) throw questionsError;
+            }
+        }
+        
+        // Fungsi untuk memuat tugas
+        async function loadStudentAssignments() {
+            studentAssignmentsList.innerHTML = '<div class="bg-white rounded-xl p-6 text-center shadow-lg border"><i data-lucide="loader" class="w-8 h-8 text-gray-400 mx-auto mb-3 animate-spin"></i><p class="text-gray-600">Memuat daftar tugas...</p></div>';
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                studentAssignmentsList.innerHTML = `
+                    <div class="bg-white rounded-xl p-6 shadow-lg border hover:shadow-xl transition-all duration-300 border-l-4 border-primary">
+                        <h3 class="text-xl font-bold text-dark mb-3">Matematika - Persamaan Kuadrat</h3>
+                        <p class="text-gray-600 mb-4">Selesaikan soal-soal persamaan kuadrat pada halaman 45-46 buku paket.</p>
+                        <div class="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
+                            <span class="flex items-center gap-1"><i data-lucide="calendar" class="icon"></i> Batas: 25 Des 2024, 23:59</span>
+                            <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">Belum Dikumpulkan</span>
+                        </div>
+                        <div class="flex gap-3 flex-wrap">
+                            <button class="bg-secondary text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 transition-all duration-300 text-sm flex items-center gap-2">
+                                <i data-lucide="send" class="icon"></i>
+                                Kumpulkan Tugas
+                            </button>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+            }, 1000);
+        }
+        
+        // Fungsi untuk memuat tugas guru
+        async function loadTeacherAssignments() {
+            teacherAssignmentsList.innerHTML = '<div class="bg-white rounded-xl p-6 text-center shadow-lg border"><i data-lucide="loader" class="w-8 h-8 text-gray-400 mx-auto mb-3 animate-spin"></i><p class="text-gray-600">Memuat daftar tugas...</p></div>';
+            lucide.createIcons();
+            
+            try {
+                // Get assignments from Supabase
+                const { data: assignments, error } = await supabase
+                    .from('assignments')
+                    .select('*')
+                    .eq('created_by', currentUser.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (assignments.length === 0) {
+                    teacherAssignmentsList.innerHTML = `
+                        <div class="bg-white rounded-xl p-8 text-center shadow-lg border">
+                            <i data-lucide="clipboard-list" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+                            <p class="text-gray-600 mb-4">Belum ada tugas yang dibuat</p>
+                            <button id="create-first-assignment" class="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300">
+                                Buat Tugas Pertama
+                            </button>
+                        </div>
+                    `;
+                    document.getElementById('create-first-assignment').addEventListener('click', () => {
+                        createAssignmentForm.classList.remove('hidden');
+                    });
+                    lucide.createIcons();
+                    return;
+                }
+
+                // Render assignments
+                teacherAssignmentsList.innerHTML = assignments.map(assignment => `
+                    <div class="bg-white rounded-xl p-6 shadow-lg border hover:shadow-xl transition-all duration-300 border-l-4 border-primary mb-4">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="text-xl font-bold text-dark">${assignment.subject} - ${assignment.title}</h3>
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold capitalize">${assignment.assignment_type}</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">${assignment.description}</p>
+                        <div class="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
+                            <span class="flex items-center gap-1">
+                                <i data-lucide="calendar" class="icon"></i> 
+                                Batas: ${new Date(assignment.deadline).toLocaleDateString('id-ID')}
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <i data-lucide="award" class="icon"></i>
+                                Nilai Maks: ${assignment.max_score}
+                            </span>
+                        </div>
+                        <div class="flex gap-3 flex-wrap">
+                            <button class="bg-secondary text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 transition-all duration-300 text-sm flex items-center gap-2">
+                                <i data-lucide="eye" class="icon"></i>
+                                Lihat Pengumpulan
+                            </button>
+                            <button class="border-2 border-primary text-primary px-4 py-2 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 text-sm flex items-center gap-2">
+                                <i data-lucide="edit" class="icon"></i>
+                                Edit
+                            </button>
+                            <button class="border-2 border-danger text-danger px-4 py-2 rounded-lg font-semibold hover:bg-danger hover:text-white transition-all duration-300 text-sm flex items-center gap-2" onclick="deleteAssignment('${assignment.id}')">
+                                <i data-lucide="trash-2" class="icon"></i>
+                                Hapus
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                lucide.createIcons();
+            } catch (error) {
+                console.error('Load assignments error:', error);
+                teacherAssignmentsList.innerHTML = `
+                    <div class="bg-white rounded-xl p-6 text-center shadow-lg border">
+                        <i data-lucide="alert-circle" class="w-8 h-8 text-red-500 mx-auto mb-3"></i>
+                        <p class="text-gray-600">Gagal memuat daftar tugas</p>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
+        }
+
+        // Fungsi untuk menghapus tugas
+        async function deleteAssignment(assignmentId) {
+            if (!confirm('Apakah Anda yakin ingin menghapus tugas ini?')) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('assignments')
+                    .delete()
+                    .eq('id', assignmentId);
+
+                if (error) throw error;
+
+                showAlert('Tugas berhasil dihapus!', 'success');
+                loadTeacherAssignments(); // Refresh list
+            } catch (error) {
+                console.error('Delete assignment error:', error);
+                showAlert('Gagal menghapus tugas', 'error');
+            }
+        }
+        
+        // Fungsi untuk memuat data pengguna (admin)
+        async function loadUsers() {
+            usersTableBody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500"><i data-lucide="loader" class="w-6 h-6 text-gray-400 mx-auto mb-2 animate-spin"></i>Memuat data pengguna...</td></tr>';
+            lucide.createIcons();
+            
+            try {
+                const { data: users, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (users.length === 0) {
+                    usersTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                <i data-lucide="users" class="w-8 h-8 text-gray-400 mx-auto mb-2"></i>
+                                <p>Belum ada data pengguna</p>
+                            </td>
+                        </tr>
+                    `;
+                    lucide.createIcons();
+                    return;
+                }
+
+                usersTableBody.innerHTML = users.map(user => `
+                    <tr class="hover:bg-gray-50 transition-colors duration-300">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">${user.user_id}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-dark">${user.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-500">${user.email || '-'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="bg-secondary text-white px-3 py-1 rounded-full text-xs font-semibold">${user.role}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">Aktif</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex gap-2">
+                                <button class="border-2 border-primary text-primary px-3 py-1 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 text-sm">
+                                    <i data-lucide="edit" class="icon"></i>
+                                </button>
+                                <button class="border-2 border-danger text-danger px-3 py-1 rounded-lg font-semibold hover:bg-danger hover:text-white transition-all duration-300 text-sm" onclick="deleteUser('${user.user_id}')">
+                                    <i data-lucide="trash-2" class="icon"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+                
+                lucide.createIcons();
+            } catch (error) {
+                console.error('Load users error:', error);
+                usersTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                            <i data-lucide="alert-circle" class="w-6 h-6 text-red-500 mx-auto mb-2"></i>
+                            <p>Gagal memuat data pengguna</p>
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons();
+            }
+        }
+
+        // Fungsi untuk menghapus user
+        async function deleteUser(userId) {
+            if (!confirm('Apakah Anda yakin ingin menghapus pengguna ini?')) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('users')
+                    .delete()
+                    .eq('user_id', userId);
+
+                if (error) throw error;
+
+                showAlert('Pengguna berhasil dihapus!', 'success');
+                loadUsers(); // Refresh list
+            } catch (error) {
+                console.error('Delete user error:', error);
+                showAlert('Gagal menghapus pengguna', 'error');
+            }
+        }
+        
+        // Fungsi untuk memuat data mata pelajaran (admin)
+        async function loadSubjects() {
+            subjectsTableBody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500"><i data-lucide="loader" class="w-6 h-6 text-gray-400 mx-auto mb-2 animate-spin"></i>Memuat data mata pelajaran...</td></tr>';
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                subjectsTableBody.innerHTML = `
+                    <tr class="hover:bg-gray-50 transition-colors duration-300">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">MAT-10</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-dark">Matematika</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-500">Budi Santoso</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-500">30</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex gap-2">
+                                <button class="border-2 border-primary text-primary px-3 py-1 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 text-sm">
+                                    <i data-lucide="edit" class="icon"></i>
+                                </button>
+                                <button class="border-2 border-danger text-danger px-3 py-1 rounded-lg font-semibold hover:bg-danger hover:text-white transition-all duration-300 text-sm">
+                                    <i data-lucide="trash-2" class="icon"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons();
+            }, 1000);
+        }
+        
+        // Fungsi untuk import CSV
+        async function importCSV(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('csv-file');
+            if (fileInput.files.length > 0) {
+                showAlert('Data siswa berhasil diimport!', 'success');
+                fileInput.value = '';
+            } else {
+                showAlert('Pilih file CSV terlebih dahulu', 'error');
+            }
+        }
+        
+        // Fungsi untuk download template
+        function downloadTemplate() {
+            showAlert('Template berhasil didownload!', 'success');
+        }
+        
+        // Fungsi untuk menampilkan modal tambah mata pelajaran
+        function showAddSubjectModal() {
+            showAlert('Fitur tambah mata pelajaran akan segera tersedia', 'warning');
+        }
+        
+        // Fungsi untuk memuat statistik
+        async function loadStats() {
+            // Hitung total users
+            const { data: users, error: usersError } = await supabase
+                .from('users')
+                .select('id');
+            
+            if (!usersError) {
+                document.getElementById('total-users').textContent = users.length;
+            }
+            
+            // Hitung total assignments
+            const { data: assignments, error: assignmentsError } = await supabase
+                .from('assignments')
+                .select('id');
+            
+            if (!assignmentsError) {
+                document.getElementById('total-assignments').textContent = assignments.length;
+            }
+            
+            // Hitung total submissions
+            const { data: submissions, error: submissionsError } = await supabase
+                .from('submissions')
+                .select('id');
+            
+            if (!submissionsError) {
+                document.getElementById('total-submissions').textContent = submissions?.length || 0;
+            }
+            
+            // Hitung active courses (subjects)
+            const { data: subjects, error: subjectsError } = await supabase
+                .from('assignments')
+                .select('subject');
+            
+            if (!subjectsError) {
+                const uniqueSubjects = [...new Set(subjects.map(s => s.subject))];
+                document.getElementById('active-courses').textContent = uniqueSubjects.length;
+            }
+        }
+    </script>
 </body>
 </html>

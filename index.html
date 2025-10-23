@@ -14,6 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -103,6 +104,27 @@
                 right: -10px;
                 width: 200px;
             }
+            
+            /* Mobile responsive improvements */
+            .mobile-stack {
+                flex-direction: column;
+            }
+            
+            .mobile-full {
+                width: 100%;
+            }
+            
+            .mobile-text-center {
+                text-align: center;
+            }
+            
+            .mobile-p-4 {
+                padding: 1rem;
+            }
+            
+            .mobile-space-y-4 > * + * {
+                margin-top: 1rem;
+            }
         }
 
         /* Custom scrollbar */
@@ -123,14 +145,97 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #a8a8a8;
         }
+
+        /* Dark mode scrollbar */
+        .dark ::-webkit-scrollbar-track {
+            background: #374151;
+        }
+        
+        .dark ::-webkit-scrollbar-thumb {
+            background: #6b7280;
+        }
+        
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        /* Theme selector styles */
+        .theme-option {
+            @apply w-8 h-8 rounded-full cursor-pointer border-2 border-transparent transition-all duration-300;
+        }
+        
+        .theme-option.active {
+            @apply border-gray-300 dark:border-gray-600 scale-110;
+        }
+
+        /* Capitalize text utility */
+        .capitalize-first {
+            text-transform: capitalize;
+        }
+        
+        /* Mobile menu styles */
+        #mobile-menu {
+            transition: all 0.3s ease;
+        }
+        
+        /* Responsive table */
+        .responsive-table {
+            @apply block overflow-x-auto whitespace-nowrap;
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-500 to-purple-600 min-h-screen font-poppins">
+<body class="bg-gradient-to-br from-blue-500 to-purple-600 min-h-screen font-poppins dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900 transition-colors duration-300">
     <!-- Alert Container -->
-    <div id="alert-container" class="fixed bottom-4 right-4 z-50 space-y-2 max-w-sm"></div>
+    <div id="alert-container" class="fixed bottom-4 right-4 z-50 space-y-2 max-w-sm w-full md:w-auto px-4 md:px-0"></div>
+
+    <!-- Theme Selector Floating Button -->
+    <div id="theme-selector" class="fixed bottom-6 left-6 z-40">
+        <button id="theme-toggle-btn" class="w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg flex items-center justify-center text-gray-700 dark:text-gray-200 hover:shadow-xl transition-all duration-300">
+            <i data-lucide="palette" class="icon"></i>
+        </button>
+        
+        <div id="theme-options" class="absolute bottom-16 left-0 bg-white dark:bg-gray-800 rounded-xl shadow-xl p-4 hidden space-y-3 w-48">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Theme Settings</h3>
+            
+            <div class="space-y-2">
+                <p class="text-xs text-gray-600 dark:text-gray-400">Color Theme</p>
+                <div class="flex space-x-2">
+                    <div class="theme-option bg-blue-500 active" data-color="blue"></div>
+                    <div class="theme-option bg-green-500" data-color="green"></div>
+                    <div class="theme-option bg-purple-500" data-color="purple"></div>
+                    <div class="theme-option bg-red-500" data-color="red"></div>
+                    <div class="theme-option bg-yellow-500" data-color="yellow"></div>
+                </div>
+            </div>
+            
+            <div class="space-y-2">
+                <p class="text-xs text-gray-600 dark:text-gray-400">Mode</p>
+                <div class="flex space-x-2">
+                    <button id="light-mode-btn" class="theme-option bg-gray-100 active flex items-center justify-center">
+                        <i data-lucide="sun" class="icon text-gray-700"></i>
+                    </button>
+                    <button id="dark-mode-btn" class="theme-option bg-gray-800 flex items-center justify-center">
+                        <i data-lucide="moon" class="icon text-gray-200"></i>
+                    </button>
+                    <button id="auto-mode-btn" class="theme-option bg-gradient-to-r from-gray-100 to-gray-800 flex items-center justify-center">
+                        <i data-lucide="monitor" class="icon text-gray-700"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <button id="reset-theme-btn" class="w-full mt-2 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-300">
+                Reset To Default
+            </button>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Button -->
+    <button id="mobile-menu-button" class="lg:hidden fixed top-4 right-4 z-50 w-10 h-10 bg-white dark:bg-gray-800 rounded-lg shadow-md flex items-center justify-center text-gray-700 dark:text-gray-200">
+        <i data-lucide="menu" class="icon"></i>
+    </button>
 
     <!-- Header -->
-    <header class="bg-white shadow-lg sticky top-0 z-40 border-b">
+    <header class="bg-white dark:bg-gray-800 shadow-lg sticky top-0 z-40 border-b dark:border-gray-700 transition-colors duration-300">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between py-4">
                 <!-- Logo -->
@@ -138,18 +243,18 @@
                     <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white">
                         <i data-lucide="book-open" class="w-5 h-5"></i>
                     </div>
-                    <span class="text-xl font-bold text-dark">Tugasmu</span>
+                    <span class="text-xl font-bold text-dark dark:text-white">Tugasmu</span>
                 </div>
 
-                <!-- Navigation -->
-                <nav class="flex items-center gap-6">
-                    <a href="#" class="nav-link font-medium text-gray-600 hover:text-primary transition-colors duration-300 active" data-page="home">
+                <!-- Desktop Navigation -->
+                <nav class="hidden lg:flex items-center gap-6">
+                    <a href="#" class="nav-link font-medium text-gray-600 dark:text-gray-300 hover:text-primary transition-colors duration-300 active capitalize-first" data-page="home">
                         Beranda
                     </a>
-                    <a href="#" class="nav-link font-medium text-gray-600 hover:text-primary transition-colors duration-300" data-page="assignments">
+                    <a href="#" class="nav-link font-medium text-gray-600 dark:text-gray-300 hover:text-primary transition-colors duration-300 capitalize-first" data-page="assignments">
                         Tugas
                     </a>
-                    <a href="#" class="nav-link font-medium text-gray-600 hover:text-primary transition-colors duration-300 hidden" id="admin-nav" data-page="admin">
+                    <a href="#" class="nav-link font-medium text-gray-600 dark:text-gray-300 hover:text-primary transition-colors duration-300 hidden capitalize-first" id="admin-nav" data-page="admin">
                         Admin
                     </a>
                 </nav>
@@ -158,33 +263,33 @@
                 <div class="flex items-center gap-4">
                     <!-- User Info Dropdown -->
                     <div id="user-info" class="hidden relative">
-                        <button id="user-dropdown-btn" class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors duration-300">
+                        <button id="user-dropdown-btn" class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-300">
                             <div class="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-sm font-medium shadow-md">
                                 U
                             </div>
                             <div class="mobile-hidden text-left">
-                                <div id="user-name" class="text-sm font-medium text-dark">User</div>
-                                <div id="user-role" class="text-xs text-gray-500">Role</div>
+                                <div id="user-name" class="text-sm font-medium text-dark dark:text-white capitalize-first">User</div>
+                                <div id="user-role" class="text-xs text-gray-500 dark:text-gray-400 capitalize-first">Role</div>
                             </div>
                             <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 mobile-hidden"></i>
                         </button>
                         
                         <!-- Dropdown Menu -->
-                        <div id="user-dropdown-menu" class="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 hidden z-50">
-                            <div class="px-4 py-2 border-b border-gray-100">
-                                <div class="text-sm font-medium text-dark" id="dropdown-user-name">User</div>
-                                <div class="text-xs text-gray-500" id="dropdown-user-role">Role</div>
+                        <div id="user-dropdown-menu" class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 hidden z-50">
+                            <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                                <div class="text-sm font-medium text-dark dark:text-white capitalize-first" id="dropdown-user-name">User</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 capitalize-first" id="dropdown-user-role">Role</div>
                             </div>
-                            <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-300">
+                            <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-300 capitalize-first">
                                 <i data-lucide="user" class="w-4 h-4"></i>
                                 Profile Saya
                             </a>
-                            <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-300">
+                            <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-300 capitalize-first">
                                 <i data-lucide="settings" class="w-4 h-4"></i>
                                 Pengaturan
                             </a>
-                            <div class="border-t border-gray-100 mt-1"></div>
-                            <button id="logout-dropdown-btn" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-300">
+                            <div class="border-t border-gray-100 dark:border-gray-700 mt-1"></div>
+                            <button id="logout-dropdown-btn" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900 transition-colors duration-300 capitalize-first">
                                 <i data-lucide="log-out" class="w-4 h-4"></i>
                                 Keluar
                             </button>
@@ -193,9 +298,48 @@
 
                     <!-- Login Button -->
                     <div id="login-section">
-                        <button id="login-btn" class="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-dark transition-colors duration-300 flex items-center gap-2">
+                        <button id="login-btn" class="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-dark transition-colors duration-300 flex items-center gap-2 capitalize-first">
                             <i data-lucide="log-in" class="w-4 h-4"></i>
-                            Masuk
+                            <span class="hidden sm:inline">Masuk</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Menu -->
+        <div id="mobile-menu" class="lg:hidden bg-white dark:bg-gray-800 border-t dark:border-gray-700 py-4 hidden">
+            <div class="container mx-auto px-4 space-y-4">
+                <a href="#" class="block nav-link font-medium text-gray-600 dark:text-gray-300 hover:text-primary transition-colors duration-300 active capitalize-first text-center py-2" data-page="home">
+                    Beranda
+                </a>
+                <a href="#" class="block nav-link font-medium text-gray-600 dark:text-gray-300 hover:text-primary transition-colors duration-300 capitalize-first text-center py-2" data-page="assignments">
+                    Tugas
+                </a>
+                <a href="#" class="block nav-link font-medium text-gray-600 dark:text-gray-300 hover:text-primary transition-colors duration-300 hidden capitalize-first text-center py-2" id="mobile-admin-nav" data-page="admin">
+                    Admin
+                </a>
+                
+                <!-- Mobile User Info -->
+                <div id="mobile-user-info" class="hidden pt-4 border-t dark:border-gray-700">
+                    <div class="flex items-center justify-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-sm font-medium shadow-md">
+                            U
+                        </div>
+                        <div class="text-left">
+                            <div id="mobile-user-name" class="text-sm font-medium text-dark dark:text-white capitalize-first">User</div>
+                            <div id="mobile-user-role" class="text-xs text-gray-500 dark:text-gray-400 capitalize-first">Role</div>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <a href="#" class="block text-center text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 py-2 rounded-lg transition-colors duration-300 capitalize-first">
+                            Profile Saya
+                        </a>
+                        <a href="#" class="block text-center text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 py-2 rounded-lg transition-colors duration-300 capitalize-first">
+                            Pengaturan
+                        </a>
+                        <button id="mobile-logout-btn" class="w-full text-center text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900 py-2 rounded-lg transition-colors duration-300 capitalize-first">
+                            Keluar
                         </button>
                     </div>
                 </div>
@@ -206,43 +350,45 @@
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-8">
         <!-- Hero Section -->
-        <section class="text-center text-white py-12 md:py-16">
+        <section class="text-center text-white py-12 md:py-16 mobile-p-4">
             <div class="mb-6">
-                <i data-lucide="graduation-cap" class="w-16 h-16 mx-auto mb-4 text-white/90"></i>
+                <i data-lucide="graduation-cap" class="w-12 h-12 md:w-16 md:h-16 mx-auto mb-4 text-white/90"></i>
             </div>
-            <h1 class="text-4xl md:text-6xl font-bold mb-6">Sistem Pengumpulan Tugas Online</h1>
-            <p class="text-xl md:text-2xl opacity-90 max-w-2xl mx-auto mb-8">
-                Platform modern untuk guru dan siswa dalam mengelola tugas sekolah dengan mudah dan efisien
+            <h1 class="text-3xl md:text-4xl lg:text-6xl font-bold mb-4 md:mb-6 capitalize-first mobile-text-center">
+                Sistem Pengumpulan Tugas Online
+            </h1>
+            <p class="text-lg md:text-xl lg:text-2xl opacity-90 max-w-2xl mx-auto mb-6 md:mb-8 capitalize-first mobile-text-center">
+                Platform Modern Untuk Guru Dan Siswa Dalam Mengelola Tugas Sekolah Dengan Mudah Dan Efisien
             </p>
-            <button id="hero-login-btn" class="bg-white text-primary px-8 py-3 rounded-xl font-bold hover:bg-gray-100 transition-all duration-300 shadow-lg flex items-center gap-2 mx-auto">
+            <button id="hero-login-btn" class="bg-white text-primary px-6 py-3 md:px-8 md:py-3 rounded-xl font-bold hover:bg-gray-100 transition-all duration-300 shadow-lg flex items-center gap-2 mx-auto capitalize-first mobile-full justify-center">
                 <i data-lucide="rocket" class="icon-lg"></i>
                 Mulai Sekarang
             </button>
         </section>
 
         <!-- Home Page -->
-        <div id="home-page" class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 animate-fade-in">
-            <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4 flex items-center gap-3">
-                <i data-lucide="sparkles" class="icon-xl"></i>
-                Selamat Datang di Tugasmu
+        <div id="home-page" class="bg-white dark:bg-gray-800 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 lg:p-8 animate-fade-in transition-colors duration-300">
+            <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4 flex items-center gap-3 capitalize-first mobile-text-center mobile-stack">
+                <i data-lucide="sparkles" class="icon-xl hidden md:block"></i>
+                Selamat Datang Di Tugasmu
             </h1>
-            <p class="text-gray-600 text-lg mb-8">
-                Sistem pengumpulan tugas modern yang dirancang khusus untuk kebutuhan sekolah dengan antarmuka yang intuitif.
+            <p class="text-gray-600 dark:text-gray-300 text-base md:text-lg mb-6 md:mb-8 capitalize-first mobile-text-center">
+                Sistem Pengumpulan Tugas Modern Yang Dirancang Khusus Untuk Kebutuhan Sekolah Dengan Antarmuka Yang Intuitif.
             </p>
 
             <!-- Tabs -->
-            <div class="border-b border-gray-200 mb-8">
-                <div class="flex flex-wrap gap-4">
-                    <button class="tab px-6 py-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-primary transition-all duration-300 active flex items-center gap-2" data-tab="info">
-                        <i data-lucide="info" class="icon"></i>
+            <div class="border-b border-gray-200 dark:border-gray-700 mb-6 md:mb-8 overflow-x-auto">
+                <div class="flex flex-nowrap md:flex-wrap gap-2 md:gap-4 min-w-max">
+                    <button class="tab px-4 py-2 md:px-6 md:py-3 border-b-2 border-transparent font-medium text-gray-500 dark:text-gray-400 hover:text-primary transition-all duration-300 active flex items-center gap-2 capitalize-first whitespace-nowrap" data-tab="info">
+                        <i data-lucide="info" class="icon hidden md:block"></i>
                         Informasi
                     </button>
-                    <button class="tab px-6 py-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-primary transition-all duration-300 flex items-center gap-2" data-tab="features">
-                        <i data-lucide="zap" class="icon"></i>
+                    <button class="tab px-4 py-2 md:px-6 md:py-3 border-b-2 border-transparent font-medium text-gray-500 dark:text-gray-400 hover:text-primary transition-all duration-300 flex items-center gap-2 capitalize-first whitespace-nowrap" data-tab="features">
+                        <i data-lucide="zap" class="icon hidden md:block"></i>
                         Fitur
                     </button>
-                    <button class="tab px-6 py-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-primary transition-all duration-300 flex items-center gap-2" data-tab="stats">
-                        <i data-lucide="bar-chart-3" class="icon"></i>
+                    <button class="tab px-4 py-2 md:px-6 md:py-3 border-b-2 border-transparent font-medium text-gray-500 dark:text-gray-400 hover:text-primary transition-all duration-300 flex items-center gap-2 capitalize-first whitespace-nowrap" data-tab="stats">
+                        <i data-lucide="bar-chart-3" class="icon hidden md:block"></i>
                         Statistik
                     </button>
                 </div>
@@ -250,208 +396,208 @@
 
             <!-- Tab Contents -->
             <div class="tab-content active" id="info-tab">
-                <h2 class="text-2xl font-bold text-dark mb-6 flex items-center gap-2">
-                    <i data-lucide="book-open" class="icon-lg"></i>
+                <h2 class="text-xl md:text-2xl font-bold text-dark dark:text-white mb-4 md:mb-6 flex items-center gap-2 capitalize-first mobile-text-center mobile-stack">
+                    <i data-lucide="book-open" class="icon-lg hidden md:block"></i>
                     Tentang Sistem
                 </h2>
-                <p class="text-gray-600 mb-8">Tugasmu menyediakan solusi lengkap untuk manajemen tugas sekolah:</p>
+                <p class="text-gray-600 dark:text-gray-300 mb-6 md:mb-8 capitalize-first mobile-text-center">Tugasmu Menyediakan Solusi Lengkap Untuk Manajemen Tugas Sekolah:</p>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white border-l-4 border-primary rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                    <div class="bg-white dark:bg-gray-700 border-l-4 border-primary rounded-xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 border dark:border-gray-600">
                         <div class="flex items-center gap-3 mb-3">
                             <i data-lucide="code" class="icon-lg text-primary"></i>
-                            <h3 class="text-xl font-bold text-dark">Untuk Developer</h3>
+                            <h3 class="text-lg md:text-xl font-bold text-dark dark:text-white capitalize-first">Untuk Developer</h3>
                         </div>
-                        <p class="text-gray-600">Kelola sistem secara keseluruhan, impor data siswa, dan pantau performa aplikasi.</p>
+                        <p class="text-gray-600 dark:text-gray-300 text-sm capitalize-first">Kelola Sistem Secara Keseluruhan, Impor Data Siswa, Dan Pantau Performa Aplikasi.</p>
                     </div>
-                    <div class="bg-white border-l-4 border-primary rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border">
+                    <div class="bg-white dark:bg-gray-700 border-l-4 border-primary rounded-xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 border dark:border-gray-600">
                         <div class="flex items-center gap-3 mb-3">
                             <i data-lucide="user-check" class="icon-lg text-primary"></i>
-                            <h3 class="text-xl font-bold text-dark">Untuk Guru</h3>
+                            <h3 class="text-lg md:text-xl font-bold text-dark dark:text-white capitalize-first">Untuk Guru</h3>
                         </div>
-                        <p class="text-gray-600">Buat dan kelola tugas, beri nilai, pantau perkembangan siswa dengan dashboard lengkap.</p>
+                        <p class="text-gray-600 dark:text-gray-300 text-sm capitalize-first">Buat Dan Kelola Tugas, Beri Nilai, Pantau Perkembangan Siswa Dengan Dashboard Lengkap.</p>
                     </div>
-                    <div class="bg-white border-l-4 border-primary rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border">
+                    <div class="bg-white dark:bg-gray-700 border-l-4 border-primary rounded-xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 border dark:border-gray-600">
                         <div class="flex items-center gap-3 mb-3">
                             <i data-lucide="users" class="icon-lg text-primary"></i>
-                            <h3 class="text-xl font-bold text-dark">Untuk Siswa</h3>
+                            <h3 class="text-lg md:text-xl font-bold text-dark dark:text-white capitalize-first">Untuk Siswa</h3>
                         </div>
-                        <p class="text-gray-600">Akses tugas, kumpulkan pekerjaan, dan lihat nilai dengan mudah menggunakan ID unik.</p>
+                        <p class="text-gray-600 dark:text-gray-300 text-sm capitalize-first">Akses Tugas, Kumpulkan Pekerjaan, Dan Lihat Nilai Dengan Mudah Menggunakan ID Unik.</p>
                     </div>
                 </div>
             </div>
 
             <div class="tab-content hidden" id="features-tab">
-                <h2 class="text-2xl font-bold text-dark mb-6 flex items-center gap-2">
-                    <i data-lucide="star" class="icon-lg"></i>
+                <h2 class="text-xl md:text-2xl font-bold text-dark dark:text-white mb-4 md:mb-6 flex items-center gap-2 capitalize-first mobile-text-center mobile-stack">
+                    <i data-lucide="star" class="icon-lg hidden md:block"></i>
                     Fitur Unggulan
                 </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 border dark:border-gray-600">
                         <div class="flex items-center gap-2 mb-2">
                             <i data-lucide="activity" class="icon text-primary"></i>
-                            <h3 class="text-lg font-bold text-dark">Dashboard Real-time</h3>
+                            <h3 class="text-base md:text-lg font-bold text-dark dark:text-white capitalize-first">Dashboard Real-Time</h3>
                         </div>
-                        <p class="text-gray-600 text-sm">Monitor aktivitas dan statistik secara langsung dengan update real-time.</p>
+                        <p class="text-gray-600 dark:text-gray-300 text-xs md:text-sm capitalize-first">Monitor Aktivitas Dan Statistik Secara Langsung Dengan Update Real-Time.</p>
                     </div>
-                    <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border">
+                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 border dark:border-gray-600">
                         <div class="flex items-center gap-2 mb-2">
                             <i data-lucide="upload" class="icon text-primary"></i>
-                            <h3 class="text-lg font-bold text-dark">Import Siswa</h3>
+                            <h3 class="text-base md:text-lg font-bold text-dark dark:text-white capitalize-first">Import Siswa</h3>
                         </div>
-                        <p class="text-gray-600 text-sm">Impor data siswa dari file CSV dengan mudah, generate ID otomatis.</p>
+                        <p class="text-gray-600 dark:text-gray-300 text-xs md:text-sm capitalize-first">Impor Data Siswa Dari File CSV Dengan Mudah, Generate ID Otomatis.</p>
                     </div>
-                    <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border">
+                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 border dark:border-gray-600">
                         <div class="flex items-center gap-2 mb-2">
                             <i data-lucide="file-edit" class="icon text-primary"></i>
-                            <h3 class="text-lg font-bold text-dark">Buat Tugas</h3>
+                            <h3 class="text-base md:text-lg font-bold text-dark dark:text-white capitalize-first">Buat Tugas</h3>
                         </div>
-                        <p class="text-gray-600 text-sm">Buat tugas dengan deadline, instruksi detail, dan pengaturan nilai.</p>
+                        <p class="text-gray-600 dark:text-gray-300 text-xs md:text-sm capitalize-first">Buat Tugas Dengan Deadline, Instruksi Detail, Dan Pengaturan Nilai.</p>
                     </div>
-                    <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border">
+                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 border dark:border-gray-600">
                         <div class="flex items-center gap-2 mb-2">
                             <i data-lucide="send" class="icon text-primary"></i>
-                            <h3 class="text-lg font-bold text-dark">Kumpulkan Tugas</h3>
+                            <h3 class="text-base md:text-lg font-bold text-dark dark:text-white capitalize-first">Kumpulkan Tugas</h3>
                         </div>
-                        <p class="text-gray-600 text-sm">Siswa dapat mengumpulkan tugas dengan mudah menggunakan ID unik.</p>
+                        <p class="text-gray-600 dark:text-gray-300 text-xs md:text-sm capitalize-first">Siswa Dapat Mengumpulkan Tugas Dengan Mudah Menggunakan ID Unik.</p>
                     </div>
-                    <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border">
+                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 border dark:border-gray-600">
                         <div class="flex items-center gap-2 mb-2">
                             <i data-lucide="file-text" class="icon text-primary"></i>
-                            <h3 class="text-lg font-bold text-dark">Laporan Detail</h3>
+                            <h3 class="text-base md:text-lg font-bold text-dark dark:text-white capitalize-first">Laporan Detail</h3>
                         </div>
-                        <p class="text-gray-600 text-sm">Analitik lengkap untuk guru dan administrator.</p>
+                        <p class="text-gray-600 dark:text-gray-300 text-xs md:text-sm capitalize-first">Analitik Lengkap Untuk Guru Dan Administrator.</p>
                     </div>
-                    <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border">
+                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 border dark:border-gray-600">
                         <div class="flex items-center gap-2 mb-2">
                             <i data-lucide="shield" class="icon text-primary"></i>
-                            <h3 class="text-lg font-bold text-dark">Keamanan</h3>
+                            <h3 class="text-base md:text-lg font-bold text-dark dark:text-white capitalize-first">Keamanan</h3>
                         </div>
-                        <p class="text-gray-600 text-sm">Sistem autentikasi aman dengan Supabase.</p>
+                        <p class="text-gray-600 dark:text-gray-300 text-xs md:text-sm capitalize-first">Sistem Autentikasi Aman Dengan Supabase.</p>
                     </div>
                 </div>
             </div>
 
             <div class="tab-content hidden" id="stats-tab">
-                <h2 class="text-2xl font-bold text-dark mb-6 flex items-center gap-2">
-                    <i data-lucide="bar-chart-3" class="icon-lg"></i>
+                <h2 class="text-xl md:text-2xl font-bold text-dark dark:text-white mb-4 md:mb-6 flex items-center gap-2 capitalize-first mobile-text-center mobile-stack">
+                    <i data-lucide="bar-chart-3" class="icon-lg hidden md:block"></i>
                     Statistik Sistem
                 </h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <div class="bg-white rounded-xl p-6 text-center shadow-lg">
-                        <i data-lucide="users" class="w-8 h-8 text-primary mx-auto mb-3"></i>
-                        <h3 class="text-3xl font-bold text-primary mb-2" id="total-users">0</h3>
-                        <p class="text-gray-600">Total Pengguna</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 text-center shadow-lg dark:shadow-gray-900">
+                        <i data-lucide="users" class="w-6 h-6 md:w-8 md:h-8 text-primary mx-auto mb-2 md:mb-3"></i>
+                        <h3 class="text-xl md:text-3xl font-bold text-primary mb-1 md:mb-2" id="total-users">0</h3>
+                        <p class="text-gray-600 dark:text-gray-300 text-xs md:text-sm capitalize-first">Total Pengguna</p>
                     </div>
-                    <div class="bg-white rounded-xl p-6 text-center shadow-lg">
-                        <i data-lucide="clipboard-list" class="w-8 h-8 text-primary mx-auto mb-3"></i>
-                        <h3 class="text-3xl font-bold text-primary mb-2" id="total-assignments">0</h3>
-                        <p class="text-gray-600">Tugas Dibuat</p>
+                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 text-center shadow-lg dark:shadow-gray-900">
+                        <i data-lucide="clipboard-list" class="w-6 h-6 md:w-8 md:h-8 text-primary mx-auto mb-2 md:mb-3"></i>
+                        <h3 class="text-xl md:text-3xl font-bold text-primary mb-1 md:mb-2" id="total-assignments">0</h3>
+                        <p class="text-gray-600 dark:text-gray-300 text-xs md:text-sm capitalize-first">Tugas Dibuat</p>
                     </div>
-                    <div class="bg-white rounded-xl p-6 text-center shadow-lg">
-                        <i data-lucide="send" class="w-8 h-8 text-primary mx-auto mb-3"></i>
-                        <h3 class="text-3xl font-bold text-primary mb-2" id="total-submissions">0</h3>
-                        <p class="text-gray-600">Pengumpulan Tugas</p>
+                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 text-center shadow-lg dark:shadow-gray-900">
+                        <i data-lucide="send" class="w-6 h-6 md:w-8 md:h-8 text-primary mx-auto mb-2 md:mb-3"></i>
+                        <h3 class="text-xl md:text-3xl font-bold text-primary mb-1 md:mb-2" id="total-submissions">0</h3>
+                        <p class="text-gray-600 dark:text-gray-300 text-xs md:text-sm capitalize-first">Pengumpulan Tugas</p>
                     </div>
-                    <div class="bg-white rounded-xl p-6 text-center shadow-lg">
-                        <i data-lucide="book-open" class="w-8 h-8 text-primary mx-auto mb-3"></i>
-                        <h3 class="text-3xl font-bold text-primary mb-2" id="active-courses">0</h3>
-                        <p class="text-gray-600">Mata Pelajaran</p>
+                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 text-center shadow-lg dark:shadow-gray-900">
+                        <i data-lucide="book-open" class="w-6 h-6 md:w-8 md:h-8 text-primary mx-auto mb-2 md:mb-3"></i>
+                        <h3 class="text-xl md:text-3xl font-bold text-primary mb-1 md:mb-2" id="active-courses">0</h3>
+                        <p class="text-gray-600 dark:text-gray-300 text-xs md:text-sm capitalize-first">Mata Pelajaran</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Assignments Page -->
-        <div id="assignments-page" class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 hidden animate-fade-in">
-            <h1 class="text-3xl md:text-4xl font-bold text-dark mb-6 flex items-center gap-3">
-                <i data-lucide="clipboard-list" class="icon-xl"></i>
+        <div id="assignments-page" class="bg-white dark:bg-gray-800 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 lg:p-8 hidden animate-fade-in transition-colors duration-300">
+            <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold text-dark dark:text-white mb-4 md:mb-6 flex items-center gap-3 capitalize-first mobile-text-center mobile-stack">
+                <i data-lucide="clipboard-list" class="icon-xl hidden md:block"></i>
                 Manajemen Tugas
             </h1>
             
             <!-- Student View -->
             <div id="student-view" class="hidden">
-                <h2 class="text-2xl font-bold text-dark mb-6 flex items-center gap-2">
-                    <i data-lucide="book-text" class="icon-lg"></i>
+                <h2 class="text-xl md:text-2xl font-bold text-dark dark:text-white mb-4 md:mb-6 flex items-center gap-2 capitalize-first mobile-text-center mobile-stack">
+                    <i data-lucide="book-text" class="icon-lg hidden md:block"></i>
                     Tugas Saya
                 </h2>
-                <div class="flex gap-4 mb-6 flex-wrap">
-                    <button id="refresh-assignments-btn" class="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2">
+                <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 flex-wrap justify-center md:justify-start">
+                    <button id="refresh-assignments-btn" class="bg-primary text-white px-4 py-2 md:px-6 md:py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2 capitalize-first mobile-full justify-center">
                         <i data-lucide="refresh-cw" class="icon"></i>
                         Refresh
                     </button>
                 </div>
                 <div id="student-assignments-list">
-                    <div class="bg-white rounded-xl p-6 text-center shadow-lg border">
-                        <i data-lucide="loader" class="w-8 h-8 text-gray-400 mx-auto mb-3 animate-spin"></i>
-                        <p class="text-gray-600">Memuat daftar tugas...</p>
+                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 text-center shadow-lg border dark:border-gray-600">
+                        <i data-lucide="loader" class="w-6 h-6 md:w-8 md:h-8 text-gray-400 mx-auto mb-2 md:mb-3 animate-spin"></i>
+                        <p class="text-gray-600 dark:text-gray-300 capitalize-first">Memuat Daftar Tugas...</p>
                     </div>
                 </div>
             </div>
             
             <!-- Teacher View -->
             <div id="teacher-view" class="hidden">
-                <h2 class="text-2xl font-bold text-dark mb-6 flex items-center gap-2">
-                    <i data-lucide="user-check" class="icon-lg"></i>
+                <h2 class="text-xl md:text-2xl font-bold text-dark dark:text-white mb-4 md:mb-6 flex items-center gap-2 capitalize-first mobile-text-center mobile-stack">
+                    <i data-lucide="user-check" class="icon-lg hidden md:block"></i>
                     Manajemen Tugas
                 </h2>
-                <div class="flex gap-4 mb-6 flex-wrap">
-                    <button id="create-assignment-btn" class="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2">
+                <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 flex-wrap justify-center md:justify-start mobile-space-y-4">
+                    <button id="create-assignment-btn" class="bg-primary text-white px-4 py-2 md:px-6 md:py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2 capitalize-first mobile-full justify-center">
                         <i data-lucide="plus" class="icon"></i>
                         Buat Tugas Baru
                     </button>
-                    <button id="refresh-teacher-assignments-btn" class="border-2 border-primary text-primary px-6 py-2 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2">
+                    <button id="refresh-teacher-assignments-btn" class="border-2 border-primary text-primary dark:text-primary px-4 py-2 md:px-6 md:py-2 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2 capitalize-first mobile-full justify-center">
                         <i data-lucide="refresh-cw" class="icon"></i>
                         Refresh
                     </button>
                 </div>
                 
                 <div id="teacher-assignments-list">
-                    <div class="bg-white rounded-xl p-6 text-center shadow-lg border">
-                        <i data-lucide="loader" class="w-8 h-8 text-gray-400 mx-auto mb-3 animate-spin"></i>
-                        <p class="text-gray-600">Memuat daftar tugas...</p>
+                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 text-center shadow-lg border dark:border-gray-600">
+                        <i data-lucide="loader" class="w-6 h-6 md:w-8 md:h-8 text-gray-400 mx-auto mb-2 md:mb-3 animate-spin"></i>
+                        <p class="text-gray-600 dark:text-gray-300 capitalize-first">Memuat Daftar Tugas...</p>
                     </div>
                 </div>
                 
                 <!-- Create Assignment Form -->
-                <div id="create-assignment-form" class="hidden mt-8">
-                    <div class="bg-white rounded-xl p-6 shadow-lg border">
-                        <h3 class="text-xl font-bold text-dark mb-6 flex items-center gap-2">
-                            <i data-lucide="file-edit" class="icon-lg"></i>
+                <div id="create-assignment-form" class="hidden mt-6 md:mt-8">
+                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 shadow-lg border dark:border-gray-600">
+                        <h3 class="text-lg md:text-xl font-bold text-dark dark:text-white mb-4 md:mb-6 flex items-center gap-2 capitalize-first mobile-text-center mobile-stack">
+                            <i data-lucide="file-edit" class="icon-lg hidden md:block"></i>
                             Buat Tugas Baru
                         </h3>
-                        <form id="assignment-form" class="space-y-6">
+                        <form id="assignment-form" class="space-y-4 md:space-y-6">
                             <div>
-                                <label class="block text-sm font-medium text-dark mb-2 flex items-center gap-2">
-                                    <i data-lucide="type" class="icon text-gray-500"></i>
+                                <label class="block text-sm font-medium text-dark dark:text-white mb-2 flex items-center gap-2 capitalize-first">
+                                    <i data-lucide="type" class="icon text-gray-500 hidden md:block"></i>
                                     Judul Tugas
                                 </label>
-                                <input type="text" id="assignment-title" required placeholder="Masukkan judul tugas" 
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                                <input type="text" id="assignment-title" required placeholder="Masukkan Judul Tugas" 
+                                       class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-dark dark:text-white">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-dark mb-2 flex items-center gap-2">
-                                    <i data-lucide="align-left" class="icon text-gray-500"></i>
+                                <label class="block text-sm font-medium text-dark dark:text-white mb-2 flex items-center gap-2 capitalize-first">
+                                    <i data-lucide="align-left" class="icon text-gray-500 hidden md:block"></i>
                                     Deskripsi Tugas
                                 </label>
-                                <textarea id="assignment-description" rows="4" required placeholder="Jelaskan detail tugas yang harus dikerjakan"
-                                          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"></textarea>
+                                <textarea id="assignment-description" rows="3" required placeholder="Jelaskan Detail Tugas Yang Harus Dikerjakan"
+                                          class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-dark dark:text-white"></textarea>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-dark mb-2 flex items-center gap-2">
-                                    <i data-lucide="calendar" class="icon text-gray-500"></i>
+                                <label class="block text-sm font-medium text-dark dark:text-white mb-2 flex items-center gap-2 capitalize-first">
+                                    <i data-lucide="calendar" class="icon text-gray-500 hidden md:block"></i>
                                     Batas Waktu Pengumpulan
                                 </label>
                                 <input type="datetime-local" id="assignment-deadline" required
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                                       class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-dark dark:text-white">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-dark mb-2 flex items-center gap-2">
-                                    <i data-lucide="book-open" class="icon text-gray-500"></i>
+                                <label class="block text-sm font-medium text-dark dark:text-white mb-2 flex items-center gap-2 capitalize-first">
+                                    <i data-lucide="book-open" class="icon text-gray-500 hidden md:block"></i>
                                     Mata Pelajaran
                                 </label>
                                 <select id="assignment-subject" required
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                                        class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-dark dark:text-white">
                                     <option value="">Pilih Mata Pelajaran</option>
                                     <option value="matematika">Matematika</option>
                                     <option value="bahasa-indonesia">Bahasa Indonesia</option>
@@ -463,12 +609,12 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-dark mb-2 flex items-center gap-2">
-                                    <i data-lucide="list" class="icon text-gray-500"></i>
+                                <label class="block text-sm font-medium text-dark dark:text-white mb-2 flex items-center gap-2 capitalize-first">
+                                    <i data-lucide="list" class="icon text-gray-500 hidden md:block"></i>
                                     Tipe Tugas
                                 </label>
                                 <select id="assignment-type" required
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                                        class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-dark dark:text-white">
                                     <option value="essay">Uraian/Essay</option>
                                     <option value="multiple_choice">Pilihan Ganda</option>
                                     <option value="file_upload">Mengumpulkan File</option>
@@ -476,19 +622,19 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-dark mb-2 flex items-center gap-2">
-                                    <i data-lucide="award" class="icon text-gray-500"></i>
+                                <label class="block text-sm font-medium text-dark dark:text-white mb-2 flex items-center gap-2 capitalize-first">
+                                    <i data-lucide="award" class="icon text-gray-500 hidden md:block"></i>
                                     Nilai Maksimal
                                 </label>
                                 <input type="number" id="assignment-max-score" min="1" max="100" value="100" required
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                                       class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-dark dark:text-white">
                             </div>
 
                             <!-- Container untuk multiple choice questions -->
                             <div id="multiple-choice-section" class="hidden">
-                                <div class="border-t pt-6 mt-6">
-                                    <h4 class="text-lg font-bold text-dark mb-4 flex items-center gap-2">
-                                        <i data-lucide="list-checks" class="icon"></i>
+                                <div class="border-t dark:border-gray-600 pt-4 md:pt-6 mt-4 md:mt-6">
+                                    <h4 class="text-base md:text-lg font-bold text-dark dark:text-white mb-3 md:mb-4 flex items-center gap-2 capitalize-first">
+                                        <i data-lucide="list-checks" class="icon hidden md:block"></i>
                                         Soal Pilihan Ganda
                                     </h4>
                                     
@@ -496,19 +642,19 @@
                                         <!-- Questions akan di-generate dinamis -->
                                     </div>
                                     
-                                    <button type="button" id="add-question-btn" class="bg-secondary text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 transition-all duration-300 flex items-center gap-2 mt-4">
+                                    <button type="button" id="add-question-btn" class="bg-secondary text-white px-3 py-2 md:px-4 md:py-2 rounded-lg font-semibold hover:bg-green-600 transition-all duration-300 flex items-center gap-2 mt-3 md:mt-4 capitalize-first mobile-full justify-center">
                                         <i data-lucide="plus" class="icon"></i>
                                         Tambah Soal
                                     </button>
                                 </div>
                             </div>
 
-                            <div class="flex gap-4 flex-wrap">
-                                <button type="submit" class="bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2">
+                            <div class="flex gap-2 md:gap-4 flex-wrap mobile-space-y-4">
+                                <button type="submit" class="bg-primary text-white px-4 py-2 md:px-6 md:py-3 rounded-lg md:rounded-xl font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2 capitalize-first mobile-full justify-center">
                                     <i data-lucide="save" class="icon"></i>
                                     Simpan Tugas
                                 </button>
-                                <button type="button" id="cancel-assignment-btn" class="border-2 border-primary text-primary px-6 py-3 rounded-xl font-semibold hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2">
+                                <button type="button" id="cancel-assignment-btn" class="border-2 border-primary text-primary dark:text-primary px-4 py-2 md:px-6 md:py-3 rounded-lg md:rounded-xl font-semibold hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2 capitalize-first mobile-full justify-center">
                                     <i data-lucide="x" class="icon"></i>
                                     Batal
                                 </button>
@@ -520,26 +666,26 @@
         </div>
 
         <!-- Admin Page -->
-        <div id="admin-page" class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 hidden animate-fade-in">
-            <h1 class="text-3xl md:text-4xl font-bold text-dark mb-4 flex items-center gap-3">
-                <i data-lucide="settings" class="icon-xl"></i>
+        <div id="admin-page" class="bg-white dark:bg-gray-800 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 lg:p-8 hidden animate-fade-in transition-colors duration-300">
+            <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold text-dark dark:text-white mb-4 flex items-center gap-3 capitalize-first mobile-text-center mobile-stack">
+                <i data-lucide="settings" class="icon-xl hidden md:block"></i>
                 Panel Administrator
             </h1>
-            <p class="text-gray-600 mb-8">Kelola pengguna, mata pelajaran, dan pengaturan sistem</p>
+            <p class="text-gray-600 dark:text-gray-300 mb-6 md:mb-8 capitalize-first mobile-text-center">Kelola Pengguna, Mata Pelajaran, Dan Pengaturan Sistem</p>
             
             <!-- Tabs -->
-            <div class="border-b border-gray-200 mb-8">
-                <div class="flex flex-wrap gap-4">
-                    <button class="tab px-6 py-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-primary transition-all duration-300 active flex items-center gap-2" data-tab="users">
-                        <i data-lucide="users" class="icon"></i>
+            <div class="border-b border-gray-200 dark:border-gray-700 mb-6 md:mb-8 overflow-x-auto">
+                <div class="flex flex-nowrap md:flex-wrap gap-2 md:gap-4 min-w-max">
+                    <button class="tab px-4 py-2 md:px-6 md:py-3 border-b-2 border-transparent font-medium text-gray-500 dark:text-gray-400 hover:text-primary transition-all duration-300 active flex items-center gap-2 capitalize-first whitespace-nowrap" data-tab="users">
+                        <i data-lucide="users" class="icon hidden md:block"></i>
                         Manajemen Pengguna
                     </button>
-                    <button class="tab px-6 py-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-primary transition-all duration-300 flex items-center gap-2" data-tab="subjects">
-                        <i data-lucide="book-open" class="icon"></i>
+                    <button class="tab px-4 py-2 md:px-6 md:py-3 border-b-2 border-transparent font-medium text-gray-500 dark:text-gray-400 hover:text-primary transition-all duration-300 flex items-center gap-2 capitalize-first whitespace-nowrap" data-tab="subjects">
+                        <i data-lucide="book-open" class="icon hidden md:block"></i>
                         Mata Pelajaran
                     </button>
-                    <button class="tab px-6 py-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-primary transition-all duration-300 flex items-center gap-2" data-tab="import">
-                        <i data-lucide="upload" class="icon"></i>
+                    <button class="tab px-4 py-2 md:px-6 md:py-3 border-b-2 border-transparent font-medium text-gray-500 dark:text-gray-400 hover:text-primary transition-all duration-300 flex items-center gap-2 capitalize-first whitespace-nowrap" data-tab="import">
+                        <i data-lucide="upload" class="icon hidden md:block"></i>
                         Import Data
                     </button>
                 </div>
@@ -547,34 +693,34 @@
 
             <!-- Users Tab -->
             <div class="tab-content active" id="users-tab">
-                <div class="flex gap-4 mb-6 flex-wrap">
-                    <button id="add-user-btn" class="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2">
+                <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 flex-wrap justify-center md:justify-start mobile-space-y-4">
+                    <button id="add-user-btn" class="bg-primary text-white px-4 py-2 md:px-6 md:py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2 capitalize-first mobile-full justify-center">
                         <i data-lucide="user-plus" class="icon"></i>
                         Tambah Pengguna
                     </button>
-                    <button id="refresh-users-btn" class="border-2 border-primary text-primary px-6 py-2 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2">
+                    <button id="refresh-users-btn" class="border-2 border-primary text-primary dark:text-primary px-4 py-2 md:px-6 md:py-2 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2 capitalize-first mobile-full justify-center">
                         <i data-lucide="refresh-cw" class="icon"></i>
                         Refresh Data
                     </button>
                 </div>
                 
-                <div class="overflow-x-auto rounded-xl shadow-lg border">
-                    <table class="w-full">
-                        <thead class="bg-gray-50">
+                <div class="overflow-x-auto rounded-xl shadow-lg border dark:border-gray-700 responsive-table">
+                    <table class="w-full min-w-max">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Peran</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                <th class="px-3 py-2 md:px-6 md:py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider capitalize-first">ID</th>
+                                <th class="px-3 py-2 md:px-6 md:py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider capitalize-first">Nama</th>
+                                <th class="px-3 py-2 md:px-6 md:py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider capitalize-first">Email</th>
+                                <th class="px-3 py-2 md:px-6 md:py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider capitalize-first">Peran</th>
+                                <th class="px-3 py-2 md:px-6 md:py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider capitalize-first">Status</th>
+                                <th class="px-3 py-2 md:px-6 md:py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider capitalize-first">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="users-table-body" class="bg-white divide-y divide-gray-200">
+                        <tbody id="users-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             <tr>
-                                <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-                                    <i data-lucide="loader" class="w-6 h-6 text-gray-400 mx-auto mb-2 animate-spin"></i>
-                                    Memuat data pengguna...
+                                <td colspan="6" class="px-3 py-4 md:px-6 md:py-8 text-center text-gray-500 dark:text-gray-400">
+                                    <i data-lucide="loader" class="w-5 h-5 md:w-6 md:h-6 text-gray-400 mx-auto mb-1 md:mb-2 animate-spin"></i>
+                                    <span class="capitalize-first">Memuat Data Pengguna...</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -584,33 +730,33 @@
 
             <!-- Subjects Tab -->
             <div class="tab-content hidden" id="subjects-tab">
-                <div class="flex gap-4 mb-6 flex-wrap">
-                    <button id="add-subject-btn" class="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2">
+                <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 flex-wrap justify-center md:justify-start mobile-space-y-4">
+                    <button id="add-subject-btn" class="bg-primary text-white px-4 py-2 md:px-6 md:py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2 capitalize-first mobile-full justify-center">
                         <i data-lucide="book-plus" class="icon"></i>
                         Tambah Mata Pelajaran
                     </button>
-                    <button id="refresh-subjects-btn" class="border-2 border-primary text-primary px-6 py-2 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2">
+                    <button id="refresh-subjects-btn" class="border-2 border-primary text-primary dark:text-primary px-4 py-2 md:px-6 md:py-2 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2 capitalize-first mobile-full justify-center">
                         <i data-lucide="refresh-cw" class="icon"></i>
                         Refresh Data
                     </button>
                 </div>
                 
-                <div class="overflow-x-auto rounded-xl shadow-lg border">
-                    <table class="w-full">
-                        <thead class="bg-gray-50">
+                <div class="overflow-x-auto rounded-xl shadow-lg border dark:border-gray-700 responsive-table">
+                    <table class="w-full min-w-max">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Mata Pelajaran</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guru Pengampu</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Siswa</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                <th class="px-3 py-2 md:px-6 md:py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider capitalize-first">Kode</th>
+                                <th class="px-3 py-2 md:px-6 md:py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider capitalize-first">Nama Mata Pelajaran</th>
+                                <th class="px-3 py-2 md:px-6 md:py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider capitalize-first">Guru Pengampu</th>
+                                <th class="px-3 py-2 md:px-6 md:py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider capitalize-first">Jumlah Siswa</th>
+                                <th class="px-3 py-2 md:px-6 md:py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider capitalize-first">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="subjects-table-body" class="bg-white divide-y divide-gray-200">
+                        <tbody id="subjects-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             <tr>
-                                <td colspan="5" class="px-6 py-8 text-center text-gray-500">
-                                    <i data-lucide="loader" class="w-6 h-6 text-gray-400 mx-auto mb-2 animate-spin"></i>
-                                    Memuat data mata pelajaran...
+                                <td colspan="5" class="px-3 py-4 md:px-6 md:py-8 text-center text-gray-500 dark:text-gray-400">
+                                    <i data-lucide="loader" class="w-5 h-5 md:w-6 md:h-6 text-gray-400 mx-auto mb-1 md:mb-2 animate-spin"></i>
+                                    <span class="capitalize-first">Memuat Data Mata Pelajaran...</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -620,46 +766,46 @@
 
             <!-- Import Tab -->
             <div class="tab-content hidden" id="import-tab">
-                <h2 class="text-2xl font-bold text-dark mb-6 flex items-center gap-2">
-                    <i data-lucide="upload" class="icon-lg"></i>
+                <h2 class="text-xl md:text-2xl font-bold text-dark dark:text-white mb-4 md:mb-6 flex items-center gap-2 capitalize-first mobile-text-center mobile-stack">
+                    <i data-lucide="upload" class="icon-lg hidden md:block"></i>
                     Import Data Siswa
                 </h2>
                 
-                <div class="bg-white rounded-xl p-6 shadow-lg border mb-6">
-                    <h3 class="text-xl font-bold text-dark mb-4 flex items-center gap-2">
-                        <i data-lucide="file-text" class="icon-lg"></i>
-                        Import dari CSV
+                <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 shadow-lg border dark:border-gray-600 mb-4 md:mb-6">
+                    <h3 class="text-lg md:text-xl font-bold text-dark dark:text-white mb-3 md:mb-4 flex items-center gap-2 capitalize-first mobile-text-center mobile-stack">
+                        <i data-lucide="file-text" class="icon-lg hidden md:block"></i>
+                        Import Dari CSV
                     </h3>
-                    <p class="text-gray-600 mb-4">Upload file CSV berisi data siswa. Format yang didukung:</p>
-                    <ul class="list-disc list-inside text-gray-600 mb-6 space-y-1">
-                        <li>Nama lengkap siswa</li>
+                    <p class="text-gray-600 dark:text-gray-300 mb-3 md:mb-4 capitalize-first mobile-text-center">Upload File CSV Berisi Data Siswa. Format Yang Didukung:</p>
+                    <ul class="list-disc list-inside text-gray-600 dark:text-gray-300 mb-4 md:mb-6 space-y-1 capitalize-first">
+                        <li>Nama Lengkap Siswa</li>
                         <li>Kelas</li>
                         <li>NIS (Nomor Induk Siswa)</li>
                     </ul>
                     
                     <form id="import-form">
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-dark mb-2 flex items-center gap-2">
-                                <i data-lucide="file" class="icon text-gray-500"></i>
+                        <div class="mb-3 md:mb-4">
+                            <label class="block text-sm font-medium text-dark dark:text-white mb-2 flex items-center gap-2 capitalize-first">
+                                <i data-lucide="file" class="icon text-gray-500 hidden md:block"></i>
                                 Pilih File CSV
                             </label>
                             <input type="file" id="csv-file" accept=".csv" required
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                                   class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-dark dark:text-white">
                         </div>
-                        <button type="submit" class="bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2">
+                        <button type="submit" class="bg-primary text-white px-4 py-2 md:px-6 md:py-3 rounded-lg md:rounded-xl font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2 capitalize-first mobile-full justify-center">
                             <i data-lucide="upload" class="icon"></i>
                             Import Data
                         </button>
                     </form>
                 </div>
                 
-                <div class="bg-white rounded-xl p-6 shadow-lg border">
-                    <h3 class="text-xl font-bold text-dark mb-4 flex items-center gap-2">
-                        <i data-lucide="download" class="icon-lg"></i>
+                <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 shadow-lg border dark:border-gray-600">
+                    <h3 class="text-lg md:text-xl font-bold text-dark dark:text-white mb-3 md:mb-4 flex items-center gap-2 capitalize-first mobile-text-center mobile-stack">
+                        <i data-lucide="download" class="icon-lg hidden md:block"></i>
                         Template CSV
                     </h3>
-                    <p class="text-gray-600 mb-4">Download template untuk memastikan format yang benar:</p>
-                    <button id="download-template-btn" class="border-2 border-primary text-primary px-6 py-3 rounded-xl font-semibold hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2">
+                    <p class="text-gray-600 dark:text-gray-300 mb-3 md:mb-4 capitalize-first mobile-text-center">Download Template Untuk Memastikan Format Yang Benar:</p>
+                    <button id="download-template-btn" class="border-2 border-primary text-primary dark:text-primary px-4 py-2 md:px-6 md:py-3 rounded-lg md:rounded-xl font-semibold hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2 capitalize-first mobile-full justify-center">
                         <i data-lucide="download" class="icon"></i>
                         Download Template
                     </button>
@@ -669,124 +815,124 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-dark text-white py-12 mt-12">
+    <footer class="bg-dark dark:bg-gray-900 text-white py-8 md:py-12 mt-8 md:mt-12 transition-colors duration-300">
         <div class="container mx-auto px-4 text-center">
-            <p>&copy; 2024 Tugasmu - Sistem Pengumpulan Tugas. All rights reserved.</p>
-            <p class="mt-2 opacity-80">Dibangun dengan ❤️ menggunakan Supabase & Tailwind CSS</p>
+            <p class="text-sm md:text-base">&copy; 2024 Tugasmu - Sistem Pengumpulan Tugas. All Rights Reserved.</p>
+            <p class="mt-2 opacity-80 text-xs md:text-sm">Dibangun Dengan ❤️ Menggunakan Supabase & Tailwind CSS</p>
         </div>
     </footer>
 
     <!-- Login Modal -->
-    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-4 animate-fade-in">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-dark flex items-center gap-2">
-                    <i data-lucide="log-in" class="icon-lg"></i>
-                    Masuk ke Sistem
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl md:rounded-3xl p-6 md:p-8 max-w-md w-full mx-auto animate-fade-in transition-colors duration-300">
+            <div class="flex justify-between items-center mb-4 md:mb-6">
+                <h2 class="text-xl md:text-2xl font-bold text-dark dark:text-white flex items-center gap-2 capitalize-first">
+                    <i data-lucide="log-in" class="icon-lg hidden md:block"></i>
+                    Masuk Ke Sistem
                 </h2>
-                <button class="close text-2xl text-gray-500 hover:text-dark transition-colors duration-300">
+                <button class="close text-xl md:text-2xl text-gray-500 dark:text-gray-400 hover:text-dark dark:hover:text-white transition-colors duration-300">
                     <i data-lucide="x" class="icon-lg"></i>
                 </button>
             </div>
             
-            <form id="login-form" class="space-y-6">
+            <form id="login-form" class="space-y-4 md:space-y-6">
                 <div>
-                    <label class="block text-sm font-medium text-dark mb-2 flex items-center gap-2">
-                        <i data-lucide="id-card" class="icon text-gray-500"></i>
+                    <label class="block text-sm font-medium text-dark dark:text-white mb-2 flex items-center gap-2 capitalize-first">
+                        <i data-lucide="id-card" class="icon text-gray-500 hidden md:block"></i>
                         User ID
                     </label>
                     <input type="text" id="login-userid" required placeholder="Masukkan User ID Anda"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
-                    <p class="text-xs text-gray-500 mt-2">
-                        Guru/Developer: gunakan ID yang diberikan
+                           class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-700 text-dark dark:text-white">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 md:mt-2 capitalize-first">
+                        Guru/Developer: Gunakan ID Yang Diberikan
                     </p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-dark mb-2 flex items-center gap-2">
-                        <i data-lucide="lock" class="icon text-gray-500"></i>
+                    <label class="block text-sm font-medium text-dark dark:text-white mb-2 flex items-center gap-2 capitalize-first">
+                        <i data-lucide="lock" class="icon text-gray-500 hidden md:block"></i>
                         Password
                     </label>
-                    <input type="password" id="login-password" required placeholder="Masukkan password"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                    <input type="password" id="login-password" required placeholder="Masukkan Password"
+                           class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-700 text-dark dark:text-white">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-dark mb-2 flex items-center gap-2">
-                        <i data-lucide="user" class="icon text-gray-500"></i>
+                    <label class="block text-sm font-medium text-dark dark:text-white mb-2 flex items-center gap-2 capitalize-first">
+                        <i data-lucide="user" class="icon text-gray-500 hidden md:block"></i>
                         Peran
                     </label>
                     <select id="login-role" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                            class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-700 text-dark dark:text-white">
                         <option value="">Pilih Peran</option>
                         <option value="teacher">Guru</option>
                         <option value="admin">Developer/Admin</option>
                     </select>
                 </div>
-                <button type="submit" class="w-full bg-primary text-white py-3 rounded-xl font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center justify-center gap-2">
+                <button type="submit" class="w-full bg-primary text-white py-2 md:py-3 rounded-lg md:rounded-xl font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center justify-center gap-2 capitalize-first">
                     <i data-lucide="rocket" class="icon"></i>
                     Masuk
                 </button>
             </form>
             
-            <div class="mt-6 pt-6 border-t border-gray-200">
-                <div class="bg-blue-50 rounded-lg p-4 mb-4">
-                    <p class="text-sm font-semibold text-blue-800 mb-2">Credentials Testing:</p>
-                    <div class="text-xs text-blue-600 space-y-1">
+            <div class="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 md:p-4 mb-3 md:mb-4">
+                    <p class="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-1 md:mb-2 capitalize-first">Credentials Testing:</p>
+                    <div class="text-xs text-blue-600 dark:text-blue-400 space-y-1">
                         <p><strong>Admin:</strong> admin / admin123</p>
                         <p><strong>Guru:</strong> guru001 / guru123</p>
                         <p><strong>Guru:</strong> guru002 / guru123</p>
                     </div>
                 </div>
-                <p class="text-sm text-gray-500 text-center">
-                    Siswa tidak perlu login. Gunakan ID siswa untuk mengumpulkan tugas.
+                <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 text-center capitalize-first">
+                    Siswa Tidak Perlu Login. Gunakan ID Siswa Untuk Mengumpulkan Tugas.
                 </p>
             </div>
         </div>
     </div>
 
     <!-- Add User Modal -->
-    <div id="add-user-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-4 animate-fade-in">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-dark flex items-center gap-2">
-                    <i data-lucide="user-plus" class="icon-lg"></i>
+    <div id="add-user-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl md:rounded-3xl p-6 md:p-8 max-w-md w-full mx-auto animate-fade-in transition-colors duration-300">
+            <div class="flex justify-between items-center mb-4 md:mb-6">
+                <h2 class="text-xl md:text-2xl font-bold text-dark dark:text-white flex items-center gap-2 capitalize-first">
+                    <i data-lucide="user-plus" class="icon-lg hidden md:block"></i>
                     Tambah Pengguna
                 </h2>
-                <button class="close-add-user text-2xl text-gray-500 hover:text-dark transition-colors duration-300">
+                <button class="close-add-user text-xl md:text-2xl text-gray-500 dark:text-gray-400 hover:text-dark dark:hover:text-white transition-colors duration-300">
                     <i data-lucide="x" class="icon-lg"></i>
                 </button>
             </div>
             
-            <form id="add-user-form" class="space-y-6">
+            <form id="add-user-form" class="space-y-4 md:space-y-6">
                 <div>
-                    <label class="block text-sm font-medium text-dark mb-2">Nama Lengkap</label>
-                    <input type="text" id="new-user-name" required placeholder="Masukkan nama lengkap"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                    <label class="block text-sm font-medium text-dark dark:text-white mb-2 capitalize-first">Nama Lengkap</label>
+                    <input type="text" id="new-user-name" required placeholder="Masukkan Nama Lengkap"
+                           class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-700 text-dark dark:text-white">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-dark mb-2">User ID</label>
+                    <label class="block text-sm font-medium text-dark dark:text-white mb-2 capitalize-first">User ID</label>
                     <input type="text" id="new-user-id" required placeholder="Masukkan User ID"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                           class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-700 text-dark dark:text-white">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-dark mb-2">Password</label>
-                    <input type="password" id="new-user-password" required placeholder="Masukkan password"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                    <label class="block text-sm font-medium text-dark dark:text-white mb-2 capitalize-first">Password</label>
+                    <input type="password" id="new-user-password" required placeholder="Masukkan Password"
+                           class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-700 text-dark dark:text-white">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-dark mb-2">Peran</label>
+                    <label class="block text-sm font-medium text-dark dark:text-white mb-2 capitalize-first">Peran</label>
                     <select id="new-user-role" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
+                            class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-700 text-dark dark:text-white">
                         <option value="">Pilih Peran</option>
                         <option value="teacher">Guru</option>
                         <option value="student">Siswa</option>
                     </select>
                 </div>
-                <div class="flex gap-4 flex-wrap">
-                    <button type="submit" class="bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2">
+                <div class="flex gap-2 md:gap-4 flex-wrap mobile-space-y-4">
+                    <button type="submit" class="bg-primary text-white px-4 py-2 md:px-6 md:py-3 rounded-lg md:rounded-xl font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center gap-2 capitalize-first mobile-full justify-center">
                         <i data-lucide="save" class="icon"></i>
                         Simpan
                     </button>
-                    <button type="button" id="cancel-add-user" class="border-2 border-primary text-primary px-6 py-3 rounded-xl font-semibold hover:bg-primary hover:text-white transition-all duration-300">
+                    <button type="button" id="cancel-add-user" class="border-2 border-primary text-primary dark:text-primary px-4 py-2 md:px-6 md:py-3 rounded-lg md:rounded-xl font-semibold hover:bg-primary hover:text-white transition-all duration-300 capitalize-first mobile-full justify-center">
                         Batal
                     </button>
                 </div>
@@ -808,6 +954,8 @@
         let currentUser = null;
         let userRole = null;
         let dropdownOpen = false;
+        let themeOptionsOpen = false;
+        let mobileMenuOpen = false;
         
         // DOM Elements
         const alertContainer = document.getElementById('alert-container');
@@ -823,6 +971,7 @@
         const loginSection = document.getElementById('login-section');
         const userInfo = document.getElementById('user-info');
         const adminNav = document.getElementById('admin-nav');
+        const mobileAdminNav = document.getElementById('mobile-admin-nav');
         const navLinks = document.querySelectorAll('.nav-link');
         const tabs = document.querySelectorAll('.tab');
         const tabContents = document.querySelectorAll('.tab-content');
@@ -850,13 +999,34 @@
         const multipleChoiceSection = document.getElementById('multiple-choice-section');
         const questionsContainer = document.getElementById('questions-container');
         const addQuestionBtn = document.getElementById('add-question-btn');
+        
+        // Theme selector elements
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const themeOptions = document.getElementById('theme-options');
+        const colorOptions = document.querySelectorAll('.theme-option[data-color]');
+        const lightModeBtn = document.getElementById('light-mode-btn');
+        const darkModeBtn = document.getElementById('dark-mode-btn');
+        const autoModeBtn = document.getElementById('auto-mode-btn');
+        const resetThemeBtn = document.getElementById('reset-theme-btn');
+        
+        // Mobile elements
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileUserInfo = document.getElementById('mobile-user-info');
+        const mobileUserName = document.getElementById('mobile-user-name');
+        const mobileUserRole = document.getElementById('mobile-user-role');
+        const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
 
         // Event Listeners
-        document.addEventListener('DOMContentLoaded', initApp);
-        loginBtn.addEventListener('click', () => showAuthModal());
-        heroLoginBtn.addEventListener('click', () => showAuthModal());
-        logoutDropdownBtn.addEventListener('click', logout);
-        userDropdownBtn.addEventListener('click', toggleUserDropdown);
+        document.addEventListener('DOMContentLoaded', InitApp);
+        loginBtn.addEventListener('click', () => ShowAuthModal());
+        heroLoginBtn.addEventListener('click', () => ShowAuthModal());
+        logoutDropdownBtn.addEventListener('click', Logout);
+        userDropdownBtn.addEventListener('click', ToggleUserDropdown);
+        mobileLogoutBtn.addEventListener('click', Logout);
+        
+        // Mobile menu toggle
+        mobileMenuButton.addEventListener('click', ToggleMobileMenu);
         
         navLinks.forEach(link => {
             link.addEventListener('click', (e) => {
@@ -864,25 +1034,30 @@
                 
                 // Jika belum login dan mencoba akses halaman selain home, tampilkan modal login
                 if (!currentUser && link.dataset.page !== 'home') {
-                    showAuthModal();
+                    ShowAuthModal();
                     return;
                 }
                 
                 navLinks.forEach(nav => nav.classList.remove('active'));
                 link.classList.add('active');
-                showPage(link.dataset.page);
+                ShowPage(link.dataset.page);
+                
+                // Close mobile menu after navigation
+                if (window.innerWidth < 1024) {
+                    ToggleMobileMenu();
+                }
             });
         });
         
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
                 const tabId = tab.dataset.tab;
-                activateTab(tabId);
+                ActivateTab(tabId);
             });
         });
         
-        loginForm.addEventListener('submit', login);
-        addUserForm.addEventListener('submit', addUser);
+        loginForm.addEventListener('submit', Login);
+        addUserForm.addEventListener('submit', AddUser);
         createAssignmentBtn.addEventListener('click', () => {
             createAssignmentForm.classList.remove('hidden');
         });
@@ -891,17 +1066,27 @@
             multipleChoiceSection.classList.add('hidden');
             questionsContainer.innerHTML = '';
         });
-        assignmentForm.addEventListener('submit', createAssignment);
-        refreshAssignmentsBtn.addEventListener('click', loadStudentAssignments);
-        refreshTeacherAssignmentsBtn.addEventListener('click', loadTeacherAssignments);
-        addUserBtn.addEventListener('click', () => showAddUserModal());
-        refreshUsersBtn.addEventListener('click', loadUsers);
-        addSubjectBtn.addEventListener('click', () => showAddSubjectModal());
-        refreshSubjectsBtn.addEventListener('click', loadSubjects);
-        importForm.addEventListener('submit', importCSV);
-        downloadTemplateBtn.addEventListener('click', downloadTemplate);
-        assignmentTypeSelect.addEventListener('change', handleAssignmentTypeChange);
-        addQuestionBtn.addEventListener('click', addNewQuestion);
+        assignmentForm.addEventListener('submit', CreateAssignment);
+        refreshAssignmentsBtn.addEventListener('click', LoadStudentAssignments);
+        refreshTeacherAssignmentsBtn.addEventListener('click', LoadTeacherAssignments);
+        addUserBtn.addEventListener('click', () => ShowAddUserModal());
+        refreshUsersBtn.addEventListener('click', LoadUsers);
+        addSubjectBtn.addEventListener('click', () => ShowAddSubjectModal());
+        refreshSubjectsBtn.addEventListener('click', LoadSubjects);
+        importForm.addEventListener('submit', ImportCSV);
+        downloadTemplateBtn.addEventListener('click', DownloadTemplate);
+        assignmentTypeSelect.addEventListener('change', HandleAssignmentTypeChange);
+        addQuestionBtn.addEventListener('click', AddNewQuestion);
+        
+        // Theme selector event listeners
+        themeToggleBtn.addEventListener('click', ToggleThemeOptions);
+        colorOptions.forEach(option => {
+            option.addEventListener('click', () => ChangeColorTheme(option.dataset.color));
+        });
+        lightModeBtn.addEventListener('click', () => ChangeMode('light'));
+        darkModeBtn.addEventListener('click', () => ChangeMode('dark'));
+        autoModeBtn.addEventListener('click', () => ChangeMode('auto'));
+        resetThemeBtn.addEventListener('click', ResetTheme);
         
         // Close modal when clicking on X or outside
         document.querySelector('.close').addEventListener('click', () => {
@@ -923,11 +1108,11 @@
             if (e.target === addUserModal) {
                 addUserModal.classList.add('hidden');
             }
-            closeDropdownOnClickOutside(e);
+            CloseDropdownOnClickOutside(e);
         });
 
         // Fungsi untuk menampilkan alert
-        function showAlert(message, type = 'info') {
+        function ShowAlert(message, type = 'info') {
             const alert = document.createElement('div');
             const bgColor = {
                 success: 'bg-green-500',
@@ -943,10 +1128,10 @@
                 info: 'ℹ️'
             }[type];
             
-            alert.className = `${bgColor} text-white p-4 rounded-xl shadow-lg animate-slide-in-right flex items-center gap-3`;
+            alert.className = `${bgColor} text-white p-3 md:p-4 rounded-xl shadow-lg animate-slide-in-right flex items-center gap-3`;
             alert.innerHTML = `
                 <span class="text-lg">${icon}</span>
-                <span class="flex-1">${message}</span>
+                <span class="flex-1 capitalize-first text-sm md:text-base">${message}</span>
                 <button class="text-white hover:text-gray-200 transition-colors duration-300" onclick="this.parentElement.remove()">
                     <i data-lucide="x" class="icon"></i>
                 </button>
@@ -966,7 +1151,7 @@
         }
 
         // Fungsi untuk generate avatar initials
-        function getAvatarInitials(name) {
+        function GetAvatarInitials(name) {
             if (!name) return 'U';
             
             const names = name.split(' ');
@@ -982,7 +1167,7 @@
         }
 
         // Dropdown functionality
-        function toggleUserDropdown() {
+        function ToggleUserDropdown() {
             const dropdownMenu = document.getElementById('user-dropdown-menu');
             const dropdownBtn = document.getElementById('user-dropdown-btn');
             const chevron = dropdownBtn.querySelector('i[data-lucide="chevron-down"]');
@@ -1000,27 +1185,166 @@
             }
         }
 
+        // Mobile menu functionality
+        function ToggleMobileMenu() {
+            mobileMenuOpen = !mobileMenuOpen;
+            const menuIcon = mobileMenuButton.querySelector('i[data-lucide]');
+            
+            if (mobileMenuOpen) {
+                mobileMenu.classList.remove('hidden');
+                // Change icon to X
+                menuIcon.setAttribute('data-lucide', 'x');
+            } else {
+                mobileMenu.classList.add('hidden');
+                // Change icon back to menu
+                menuIcon.setAttribute('data-lucide', 'menu');
+            }
+            
+            lucide.createIcons();
+        }
+
+        // Theme selector functionality
+        function ToggleThemeOptions() {
+            themeOptionsOpen = !themeOptionsOpen;
+            
+            if (themeOptionsOpen) {
+                themeOptions.classList.remove('hidden');
+            } else {
+                themeOptions.classList.add('hidden');
+            }
+        }
+
+        // Change color theme
+        function ChangeColorTheme(color) {
+            // Remove active class from all color options
+            colorOptions.forEach(option => option.classList.remove('active'));
+            
+            // Add active class to selected color
+            event.target.classList.add('active');
+            
+            // Update CSS variables for color theme
+            document.documentElement.style.setProperty('--color-primary', GetColorValue(color));
+            document.documentElement.style.setProperty('--color-primary-dark', GetColorValue(color, 'dark'));
+            
+            // Save to localStorage
+            localStorage.setItem('colorTheme', color);
+            
+            ShowAlert(`Tema Warna Diubah Ke ${color}`, 'success');
+        }
+
+        // Get color value based on theme
+        function GetColorValue(color, shade = 'normal') {
+            const colors = {
+                blue: { normal: '#4361ee', dark: '#3a56d4' },
+                green: { normal: '#06d6a0', dark: '#05c191' },
+                purple: { normal: '#7209b7', dark: '#5f098f' },
+                red: { normal: '#ef476f', dark: '#d63d62' },
+                yellow: { normal: '#ffd166', dark: '#e6b952' }
+            };
+            
+            return colors[color] ? colors[color][shade] : colors.blue[shade];
+        }
+
+        // Change mode (light/dark/auto)
+        function ChangeMode(mode) {
+            // Remove active class from all mode buttons
+            [lightModeBtn, darkModeBtn, autoModeBtn].forEach(btn => btn.classList.remove('active'));
+            
+            // Add active class to selected mode
+            event.target.classList.add('active');
+            
+            // Apply mode
+            if (mode === 'light') {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else if (mode === 'dark') {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                // Auto mode - follow system preference
+                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+                localStorage.setItem('theme', 'auto');
+            }
+            
+            ShowAlert(`Mode Diubah Ke ${mode}`, 'success');
+        }
+
+        // Reset theme to default
+        function ResetTheme() {
+            // Reset color theme
+            colorOptions.forEach(option => {
+                if (option.dataset.color === 'blue') {
+                    option.classList.add('active');
+                } else {
+                    option.classList.remove('active');
+                }
+            });
+            
+            // Reset to default colors
+            document.documentElement.style.removeProperty('--color-primary');
+            document.documentElement.style.removeProperty('--color-primary-dark');
+            
+            // Reset mode to auto
+            [lightModeBtn, darkModeBtn, autoModeBtn].forEach(btn => btn.classList.remove('active'));
+            autoModeBtn.classList.add('active');
+            
+            // Apply auto mode
+            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            
+            // Clear localStorage
+            localStorage.removeItem('colorTheme');
+            localStorage.removeItem('theme');
+            
+            ShowAlert('Tema Direset Ke Default', 'success');
+        }
+
         // Close dropdown when clicking outside
-        function closeDropdownOnClickOutside(event) {
+        function CloseDropdownOnClickOutside(event) {
             const userInfo = document.getElementById('user-info');
             const dropdownBtn = document.getElementById('user-dropdown-btn');
             const dropdownMenu = document.getElementById('user-dropdown-menu');
+            const themeSelector = document.getElementById('theme-selector');
+            const themeToggle = document.getElementById('theme-toggle-btn');
+            const themeOptions = document.getElementById('theme-options');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
             
             if (dropdownOpen && 
                 !userInfo.contains(event.target) && 
                 !dropdownBtn.contains(event.target) &&
                 !dropdownMenu.contains(event.target)) {
-                toggleUserDropdown();
+                ToggleUserDropdown();
+            }
+            
+            if (themeOptionsOpen && 
+                !themeSelector.contains(event.target) && 
+                !themeToggle.contains(event.target) &&
+                !themeOptions.contains(event.target)) {
+                ToggleThemeOptions();
+            }
+            
+            if (mobileMenuOpen && 
+                !mobileMenuButton.contains(event.target) &&
+                !mobileMenu.contains(event.target)) {
+                ToggleMobileMenu();
             }
         }
 
         // Handle assignment type change
-        function handleAssignmentTypeChange() {
+        function HandleAssignmentTypeChange() {
             const type = this.value;
             
             if (type === 'multiple_choice') {
                 multipleChoiceSection.classList.remove('hidden');
-                addNewQuestion(); // Tambah soal pertama
+                AddNewQuestion(); // Tambah soal pertama
             } else {
                 multipleChoiceSection.classList.add('hidden');
                 questionsContainer.innerHTML = '';
@@ -1028,47 +1352,47 @@
         }
 
         // Fungsi untuk tambah soal baru
-        function addNewQuestion() {
+        function AddNewQuestion() {
             const questionId = 'question_' + Date.now();
             
             const questionHTML = `
-                <div class="bg-gray-50 rounded-xl p-4 mb-4 border" data-question-id="${questionId}">
-                    <div class="flex justify-between items-center mb-3">
-                        <h5 class="font-semibold text-dark">Soal Baru</h5>
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-3 md:p-4 mb-3 md:mb-4 border dark:border-gray-600" data-question-id="${questionId}">
+                    <div class="flex justify-between items-center mb-2 md:mb-3">
+                        <h5 class="font-semibold text-dark dark:text-white capitalize-first text-sm md:text-base">Soal Baru</h5>
                         <button type="button" class="text-red-500 hover:text-red-700 delete-question" data-question-id="${questionId}">
                             <i data-lucide="trash-2" class="icon"></i>
                         </button>
                     </div>
                     
-                    <div class="mb-3">
-                        <label class="block text-sm font-medium text-dark mb-2">Pertanyaan</label>
-                        <textarea class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary question-text" 
+                    <div class="mb-2 md:mb-3">
+                        <label class="block text-sm font-medium text-dark dark:text-white mb-1 md:mb-2 capitalize-first">Pertanyaan</label>
+                        <textarea class="w-full px-2 py-1 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary question-text bg-white dark:bg-gray-800 text-dark dark:text-white text-sm" 
                                   placeholder="Tulis pertanyaan di sini..." rows="2"></textarea>
                     </div>
                     
-                    <div class="mb-3">
-                        <label class="block text-sm font-medium text-dark mb-2">Pilihan Jawaban</label>
-                        <div class="space-y-2 options-container">
-                            <div class="flex items-center gap-2 option-item">
+                    <div class="mb-2 md:mb-3">
+                        <label class="block text-sm font-medium text-dark dark:text-white mb-1 md:mb-2 capitalize-first">Pilihan Jawaban</label>
+                        <div class="space-y-1 md:space-y-2 options-container">
+                            <div class="flex items-center gap-1 md:gap-2 option-item">
                                 <input type="radio" name="correct_${questionId}" value="A" class="correct-option">
-                                <input type="text" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary option-text" 
+                                <input type="text" class="flex-1 px-2 py-1 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary option-text bg-white dark:bg-gray-800 text-dark dark:text-white text-sm" 
                                        placeholder="Pilihan A" data-option="A">
                             </div>
-                            <div class="flex items-center gap-2 option-item">
+                            <div class="flex items-center gap-1 md:gap-2 option-item">
                                 <input type="radio" name="correct_${questionId}" value="B" class="correct-option">
-                                <input type="text" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary option-text" 
+                                <input type="text" class="flex-1 px-2 py-1 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary option-text bg-white dark:bg-gray-800 text-dark dark:text-white text-sm" 
                                        placeholder="Pilihan B" data-option="B">
                             </div>
                         </div>
-                        <button type="button" class="add-option-btn text-primary hover:text-primary-dark text-sm flex items-center gap-1 mt-2" data-question-id="${questionId}">
-                            <i data-lucide="plus" class="w-4 h-4"></i>
+                        <button type="button" class="add-option-btn text-primary hover:text-primary-dark text-xs md:text-sm flex items-center gap-1 mt-1 md:mt-2 capitalize-first" data-question-id="${questionId}">
+                            <i data-lucide="plus" class="w-3 h-3 md:w-4 md:h-4"></i>
                             Tambah Pilihan
                         </button>
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-dark mb-2">Nilai Maksimal</label>
-                        <input type="number" class="question-score w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" 
+                        <label class="block text-sm font-medium text-dark dark:text-white mb-1 md:mb-2 capitalize-first">Nilai Maksimal</label>
+                        <input type="number" class="question-score w-full px-2 py-1 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-800 text-dark dark:text-white text-sm" 
                                value="1" min="1">
                     </div>
                 </div>
@@ -1084,12 +1408,12 @@
             });
             
             newQuestion.querySelector('.add-option-btn').addEventListener('click', function() {
-                addOptionToQuestion(questionId);
+                AddOptionToQuestion(questionId);
             });
         }
 
         // Fungsi untuk tambah pilihan jawaban
-        function addOptionToQuestion(questionId) {
+        function AddOptionToQuestion(questionId) {
             const questionElement = document.querySelector(`[data-question-id="${questionId}"]`);
             const optionsContainer = questionElement.querySelector('.options-container');
             
@@ -1097,9 +1421,9 @@
             const nextOption = String.fromCharCode(65 + options.length); // A, B, C, D, etc.
             
             const optionHTML = `
-                <div class="flex items-center gap-2 option-item">
+                <div class="flex items-center gap-1 md:gap-2 option-item">
                     <input type="radio" name="correct_${questionId}" value="${nextOption}" class="correct-option">
-                    <input type="text" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary option-text" 
+                    <input type="text" class="flex-1 px-2 py-1 md:px-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary option-text bg-white dark:bg-gray-800 text-dark dark:text-white text-sm" 
                            placeholder="Pilihan ${nextOption}" data-option="${nextOption}">
                 </div>
             `;
@@ -1108,7 +1432,10 @@
         }
 
         // Fungsi inisialisasi aplikasi
-        async function initApp() {
+        async function InitApp() {
+            // Load theme settings
+            LoadThemeSettings();
+            
             // Refresh icons
             lucide.createIcons();
             
@@ -1141,18 +1468,53 @@
             }
             
             // Update UI berdasarkan status login
-            updateUI();
+            UpdateUI();
             
             // Jika user sudah login, load content sesuai role
             if (currentUser) {
-                loadContentBasedOnRole();
-                loadStats();
-                showAlert(`Selamat datang kembali, ${currentUser.name}!`, 'success');
+                LoadContentBasedOnRole();
+                LoadStats();
+                ShowAlert(`Selamat Datang Kembali, ${currentUser.name}!`, 'success');
+            }
+        }
+        
+        // Load theme settings from localStorage
+        function LoadThemeSettings() {
+            // Load color theme
+            const savedColorTheme = localStorage.getItem('colorTheme');
+            if (savedColorTheme) {
+                const colorOption = document.querySelector(`.theme-option[data-color="${savedColorTheme}"]`);
+                if (colorOption) {
+                    colorOptions.forEach(option => option.classList.remove('active'));
+                    colorOption.classList.add('active');
+                    ChangeColorTheme(savedColorTheme);
+                }
+            }
+            
+            // Load mode
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                [lightModeBtn, darkModeBtn, autoModeBtn].forEach(btn => btn.classList.remove('active'));
+                
+                if (savedTheme === 'light') {
+                    lightModeBtn.classList.add('active');
+                    document.documentElement.classList.remove('dark');
+                } else if (savedTheme === 'dark') {
+                    darkModeBtn.classList.add('active');
+                    document.documentElement.classList.add('dark');
+                } else {
+                    autoModeBtn.classList.add('active');
+                    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                }
             }
         }
         
         // Fungsi untuk memperbarui UI berdasarkan status login
-        function updateUI() {
+        function UpdateUI() {
             const loginSection = document.getElementById('login-section');
             const userInfo = document.getElementById('user-info');
             const userName = document.getElementById('user-name');
@@ -1165,6 +1527,7 @@
                 // User sudah login
                 loginSection.classList.add('hidden');
                 userInfo.classList.remove('hidden');
+                mobileUserInfo.classList.remove('hidden');
                 
                 // Update user data
                 const displayName = currentUser.name;
@@ -1176,17 +1539,22 @@
                 if (dropdownUserName) dropdownUserName.textContent = displayName;
                 if (dropdownUserRole) dropdownUserRole.textContent = displayRole;
                 if (userAvatar) {
-                    userAvatar.textContent = getAvatarInitials(currentUser.name);
+                    userAvatar.textContent = GetAvatarInitials(currentUser.name);
                 }
+                if (mobileUserName) mobileUserName.textContent = displayName;
+                if (mobileUserRole) mobileUserRole.textContent = displayRole;
                 
                 // Tampilkan admin nav jika role admin
                 adminNav.classList.toggle('hidden', currentUser.role !== 'admin');
+                mobileAdminNav.classList.toggle('hidden', currentUser.role !== 'admin');
                 
             } else {
                 // User belum login
                 loginSection.classList.remove('hidden');
                 userInfo.classList.add('hidden');
+                mobileUserInfo.classList.add('hidden');
                 adminNav.classList.add('hidden');
+                mobileAdminNav.classList.add('hidden');
                 
                 // Pastikan dropdown tertutup
                 document.getElementById('user-dropdown-menu').classList.add('hidden');
@@ -1197,7 +1565,7 @@
         }
         
         // Fungsi untuk memuat konten berdasarkan peran
-        function loadContentBasedOnRole() {
+        function LoadContentBasedOnRole() {
             // Reset semua view dulu
             studentView.classList.add('hidden');
             teacherView.classList.add('hidden');
@@ -1205,16 +1573,16 @@
             if (userRole === 'student') {
                 studentView.classList.remove('hidden');
                 teacherView.classList.add('hidden');
-                loadStudentAssignments();
+                LoadStudentAssignments();
             } else if (userRole === 'teacher') {
                 studentView.classList.add('hidden');
                 teacherView.classList.remove('hidden');
-                loadTeacherAssignments();
+                LoadTeacherAssignments();
             } else if (userRole === 'admin') {
                 teacherView.classList.add('hidden');
                 // Load data admin
-                loadUsers();
-                loadSubjects();
+                LoadUsers();
+                LoadSubjects();
             }
             
             // Refresh icons
@@ -1222,7 +1590,7 @@
         }
         
         // Fungsi untuk menampilkan halaman
-        function showPage(pageId) {
+        function ShowPage(pageId) {
             // Sembunyikan semua halaman
             homePage.classList.add('hidden');
             assignmentsPage.classList.add('hidden');
@@ -1233,7 +1601,7 @@
             
             // Jika sudah login, load content berdasarkan role di halaman assignments
             if (pageId === 'assignments' && currentUser) {
-                loadContentBasedOnRole();
+                LoadContentBasedOnRole();
             }
             
             // Refresh icons
@@ -1241,10 +1609,10 @@
         }
         
         // Fungsi untuk mengaktifkan tab
-        function activateTab(tabId) {
+        function ActivateTab(tabId) {
             tabs.forEach(tab => {
                 tab.classList.remove('active');
-                tab.classList.add('border-transparent', 'text-gray-500');
+                tab.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
             });
             tabContents.forEach(content => {
                 content.classList.add('hidden');
@@ -1252,7 +1620,7 @@
             
             const activeTab = document.querySelector(`.tab[data-tab="${tabId}"]`);
             activeTab.classList.add('active', 'border-primary', 'text-primary');
-            activeTab.classList.remove('border-transparent', 'text-gray-500');
+            activeTab.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
             
             document.getElementById(`${tabId}-tab`).classList.remove('hidden');
             
@@ -1261,19 +1629,19 @@
         }
         
         // Fungsi untuk menampilkan modal autentikasi
-        function showAuthModal() {
+        function ShowAuthModal() {
             authModal.classList.remove('hidden');
             lucide.createIcons();
         }
 
         // Fungsi untuk menampilkan modal tambah user
-        function showAddUserModal() {
+        function ShowAddUserModal() {
             addUserModal.classList.remove('hidden');
             lucide.createIcons();
         }
         
         // Fungsi untuk login dengan Supabase
-        async function login(e) {
+        async function Login(e) {
             e.preventDefault();
             
             const userid = document.getElementById('login-userid').value;
@@ -1292,11 +1660,11 @@
 
                     if (error) {
                         console.error('Supabase error:', error);
-                        throw new Error('Terjadi kesalahan saat login');
+                        throw new Error('Terjadi Kesalahan Saat Login');
                     }
                     
                     if (!data || data.length === 0) {
-                        throw new Error('User ID atau password salah');
+                        throw new Error('User ID Atau Password Salah');
                     }
 
                     const userData = data[0];
@@ -1317,27 +1685,27 @@
                     authModal.classList.add('hidden');
                     
                     // Update UI
-                    updateUI();
-                    loadContentBasedOnRole();
+                    UpdateUI();
+                    LoadContentBasedOnRole();
                     
                     // Redirect ke halaman assignments setelah login
-                    showPage('assignments');
+                    ShowPage('assignments');
                     navLinks.forEach(nav => nav.classList.remove('active'));
                     document.querySelector(`[data-page="assignments"]`).classList.add('active');
                     
-                    showAlert(`Login berhasil! Selamat datang ${userData.name}`, 'success');
+                    ShowAlert(`Login Berhasil! Selamat Datang ${userData.name}`, 'success');
                     
                 } else {
-                    throw new Error('Semua field harus diisi');
+                    throw new Error('Semua Field Harus Diisi');
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                showAlert('Login gagal: ' + error.message, 'error');
+                ShowAlert('Login Gagal: ' + error.message, 'error');
             }
         }
 
         // Fungsi untuk menambah user (admin)
-        async function addUser(e) {
+        async function AddUser(e) {
             e.preventDefault();
             
             const name = document.getElementById('new-user-name').value;
@@ -1361,21 +1729,26 @@
 
                 if (error) throw error;
 
-                showAlert('Pengguna berhasil ditambahkan!', 'success');
+                ShowAlert('Pengguna Berhasil Ditambahkan!', 'success');
                 addUserForm.reset();
                 addUserModal.classList.add('hidden');
-                loadUsers(); // Refresh user list
+                LoadUsers(); // Refresh user list
             } catch (error) {
                 console.error('Add user error:', error);
-                showAlert('Gagal menambah pengguna: ' + error.message, 'error');
+                ShowAlert('Gagal Menambah Pengguna: ' + error.message, 'error');
             }
         }
         
         // Fungsi untuk logout
-        async function logout() {
+        async function Logout() {
             // Tutup dropdown dulu
             dropdownOpen = false;
             document.getElementById('user-dropdown-menu').classList.add('hidden');
+            
+            // Tutup mobile menu
+            if (mobileMenuOpen) {
+                ToggleMobileMenu();
+            }
             
             // Hapus dari localStorage
             localStorage.removeItem('currentUser');
@@ -1384,18 +1757,18 @@
             userRole = null;
             
             // Reset UI ke state awal
-            updateUI();
+            UpdateUI();
             
             // Kembali ke halaman home
-            showPage('home');
+            ShowPage('home');
             navLinks.forEach(nav => nav.classList.remove('active'));
             document.querySelector(`[data-page="home"]`).classList.add('active');
             
-            showAlert('Anda telah logout', 'info');
+            ShowAlert('Anda Telah Logout', 'info');
         }
         
         // Fungsi untuk membuat tugas (guru)
-        async function createAssignment(e) {
+        async function CreateAssignment(e) {
             e.preventDefault();
             
             const title = document.getElementById('assignment-title').value;
@@ -1428,23 +1801,23 @@
                 
                 // Jika tipe multiple choice, insert questions
                 if (assignmentType === 'multiple_choice') {
-                    await saveMultipleChoiceQuestions(assignmentId);
+                    await SaveMultipleChoiceQuestions(assignmentId);
                 }
 
-                showAlert('Tugas berhasil dibuat!', 'success');
+                ShowAlert('Tugas Berhasil Dibuat!', 'success');
                 assignmentForm.reset();
                 createAssignmentForm.classList.add('hidden');
                 multipleChoiceSection.classList.add('hidden');
                 questionsContainer.innerHTML = '';
-                loadTeacherAssignments();
+                LoadTeacherAssignments();
             } catch (error) {
                 console.error('Create assignment error:', error);
-                showAlert('Gagal membuat tugas: ' + error.message, 'error');
+                ShowAlert('Gagal Membuat Tugas: ' + error.message, 'error');
             }
         }
 
         // Fungsi untuk save multiple choice questions
-        async function saveMultipleChoiceQuestions(assignmentId) {
+        async function SaveMultipleChoiceQuestions(assignmentId) {
             const questions = document.querySelectorAll('[data-question-id]');
             const questionsData = [];
             
@@ -1485,21 +1858,21 @@
         }
         
         // Fungsi untuk memuat tugas
-        async function loadStudentAssignments() {
-            studentAssignmentsList.innerHTML = '<div class="bg-white rounded-xl p-6 text-center shadow-lg border"><i data-lucide="loader" class="w-8 h-8 text-gray-400 mx-auto mb-3 animate-spin"></i><p class="text-gray-600">Memuat daftar tugas...</p></div>';
+        async function LoadStudentAssignments() {
+            studentAssignmentsList.innerHTML = '<div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 text-center shadow-lg border dark:border-gray-600"><i data-lucide="loader" class="w-6 h-6 md:w-8 md:h-8 text-gray-400 mx-auto mb-2 md:mb-3 animate-spin"></i><p class="text-gray-600 dark:text-gray-300 capitalize-first">Memuat Daftar Tugas...</p></div>';
             lucide.createIcons();
             
             setTimeout(() => {
                 studentAssignmentsList.innerHTML = `
-                    <div class="bg-white rounded-xl p-6 shadow-lg border hover:shadow-xl transition-all duration-300 border-l-4 border-primary">
-                        <h3 class="text-xl font-bold text-dark mb-3">Matematika - Persamaan Kuadrat</h3>
-                        <p class="text-gray-600 mb-4">Selesaikan soal-soal persamaan kuadrat pada halaman 45-46 buku paket.</p>
-                        <div class="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
+                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 shadow-lg border hover:shadow-xl transition-all duration-300 border-l-4 border-primary">
+                        <h3 class="text-lg md:text-xl font-bold text-dark dark:text-white mb-2 md:mb-3">Matematika - Persamaan Kuadrat</h3>
+                        <p class="text-gray-600 dark:text-gray-300 text-sm mb-3 md:mb-4">Selesaikan Soal-Soal Persamaan Kuadrat Pada Halaman 45-46 Buku Paket.</p>
+                        <div class="flex flex-wrap gap-2 md:gap-4 text-xs md:text-sm text-gray-500 mb-3 md:mb-4">
                             <span class="flex items-center gap-1"><i data-lucide="calendar" class="icon"></i> Batas: 25 Des 2024, 23:59</span>
-                            <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">Belum Dikumpulkan</span>
+                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-semibold">Belum Dikumpulkan</span>
                         </div>
-                        <div class="flex gap-3 flex-wrap">
-                            <button class="bg-secondary text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 transition-all duration-300 text-sm flex items-center gap-2">
+                        <div class="flex gap-2 md:gap-3 flex-wrap">
+                            <button class="bg-secondary text-white px-3 py-1 md:px-4 md:py-2 rounded-lg font-semibold hover:bg-green-600 transition-all duration-300 text-xs md:text-sm flex items-center gap-1 md:gap-2 mobile-full justify-center">
                                 <i data-lucide="send" class="icon"></i>
                                 Kumpulkan Tugas
                             </button>
@@ -1511,8 +1884,8 @@
         }
         
         // Fungsi untuk memuat tugas guru
-        async function loadTeacherAssignments() {
-            teacherAssignmentsList.innerHTML = '<div class="bg-white rounded-xl p-6 text-center shadow-lg border"><i data-lucide="loader" class="w-8 h-8 text-gray-400 mx-auto mb-3 animate-spin"></i><p class="text-gray-600">Memuat daftar tugas...</p></div>';
+        async function LoadTeacherAssignments() {
+            teacherAssignmentsList.innerHTML = '<div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 text-center shadow-lg border dark:border-gray-600"><i data-lucide="loader" class="w-6 h-6 md:w-8 md:h-8 text-gray-400 mx-auto mb-2 md:mb-3 animate-spin"></i><p class="text-gray-600 dark:text-gray-300 capitalize-first">Memuat Daftar Tugas...</p></div>';
             lucide.createIcons();
             
             try {
@@ -1527,10 +1900,10 @@
 
                 if (assignments.length === 0) {
                     teacherAssignmentsList.innerHTML = `
-                        <div class="bg-white rounded-xl p-8 text-center shadow-lg border">
-                            <i data-lucide="clipboard-list" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
-                            <p class="text-gray-600 mb-4">Belum ada tugas yang dibuat</p>
-                            <button id="create-first-assignment" class="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300">
+                        <div class="bg-white dark:bg-gray-700 rounded-xl p-6 md:p-8 text-center shadow-lg border dark:border-gray-600">
+                            <i data-lucide="clipboard-list" class="w-8 h-8 md:w-12 md:h-12 text-gray-400 mx-auto mb-3 md:mb-4"></i>
+                            <p class="text-gray-600 dark:text-gray-300 mb-3 md:mb-4">Belum Ada Tugas Yang Dibuat</p>
+                            <button id="create-first-assignment" class="bg-primary text-white px-4 py-2 md:px-6 md:py-2 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300 mobile-full">
                                 Buat Tugas Pertama
                             </button>
                         </div>
@@ -1544,13 +1917,13 @@
 
                 // Render assignments
                 teacherAssignmentsList.innerHTML = assignments.map(assignment => `
-                    <div class="bg-white rounded-xl p-6 shadow-lg border hover:shadow-xl transition-all duration-300 border-l-4 border-primary mb-4">
-                        <div class="flex justify-between items-start mb-3">
-                            <h3 class="text-xl font-bold text-dark">${assignment.subject} - ${assignment.title}</h3>
+                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 shadow-lg border hover:shadow-xl transition-all duration-300 border-l-4 border-primary mb-3 md:mb-4">
+                        <div class="flex justify-between items-start mb-2 md:mb-3">
+                            <h3 class="text-lg md:text-xl font-bold text-dark dark:text-white">${assignment.subject} - ${assignment.title}</h3>
                             <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold capitalize">${assignment.assignment_type}</span>
                         </div>
-                        <p class="text-gray-600 mb-4">${assignment.description}</p>
-                        <div class="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
+                        <p class="text-gray-600 dark:text-gray-300 text-sm mb-3 md:mb-4">${assignment.description}</p>
+                        <div class="flex flex-wrap gap-2 md:gap-4 text-xs md:text-sm text-gray-500 mb-3 md:mb-4">
                             <span class="flex items-center gap-1">
                                 <i data-lucide="calendar" class="icon"></i> 
                                 Batas: ${new Date(assignment.deadline).toLocaleDateString('id-ID')}
@@ -1560,16 +1933,16 @@
                                 Nilai Maks: ${assignment.max_score}
                             </span>
                         </div>
-                        <div class="flex gap-3 flex-wrap">
-                            <button class="bg-secondary text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 transition-all duration-300 text-sm flex items-center gap-2">
+                        <div class="flex gap-2 md:gap-3 flex-wrap">
+                            <button class="bg-secondary text-white px-3 py-1 md:px-4 md:py-2 rounded-lg font-semibold hover:bg-green-600 transition-all duration-300 text-xs md:text-sm flex items-center gap-1 md:gap-2">
                                 <i data-lucide="eye" class="icon"></i>
                                 Lihat Pengumpulan
                             </button>
-                            <button class="border-2 border-primary text-primary px-4 py-2 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 text-sm flex items-center gap-2">
+                            <button class="border-2 border-primary text-primary dark:text-primary px-3 py-1 md:px-4 md:py-2 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 text-xs md:text-sm flex items-center gap-1 md:gap-2">
                                 <i data-lucide="edit" class="icon"></i>
                                 Edit
                             </button>
-                            <button class="border-2 border-danger text-danger px-4 py-2 rounded-lg font-semibold hover:bg-danger hover:text-white transition-all duration-300 text-sm flex items-center gap-2" onclick="deleteAssignment('${assignment.id}')">
+                            <button class="border-2 border-danger text-danger px-3 py-1 md:px-4 md:py-2 rounded-lg font-semibold hover:bg-danger hover:text-white transition-all duration-300 text-xs md:text-sm flex items-center gap-1 md:gap-2" onclick="DeleteAssignment('${assignment.id}')">
                                 <i data-lucide="trash-2" class="icon"></i>
                                 Hapus
                             </button>
@@ -1581,9 +1954,9 @@
             } catch (error) {
                 console.error('Load assignments error:', error);
                 teacherAssignmentsList.innerHTML = `
-                    <div class="bg-white rounded-xl p-6 text-center shadow-lg border">
-                        <i data-lucide="alert-circle" class="w-8 h-8 text-red-500 mx-auto mb-3"></i>
-                        <p class="text-gray-600">Gagal memuat daftar tugas</p>
+                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 text-center shadow-lg border dark:border-gray-600">
+                        <i data-lucide="alert-circle" class="w-6 h-6 md:w-8 md:h-8 text-red-500 mx-auto mb-2 md:mb-3"></i>
+                        <p class="text-gray-600 dark:text-gray-300">Gagal Memuat Daftar Tugas</p>
                     </div>
                 `;
                 lucide.createIcons();
@@ -1591,8 +1964,8 @@
         }
 
         // Fungsi untuk menghapus tugas
-        async function deleteAssignment(assignmentId) {
-            if (!confirm('Apakah Anda yakin ingin menghapus tugas ini?')) return;
+        async function DeleteAssignment(assignmentId) {
+            if (!confirm('Apakah Anda Yakin Ingin Menghapus Tugas Ini?')) return;
             
             try {
                 const { error } = await supabase
@@ -1602,17 +1975,17 @@
 
                 if (error) throw error;
 
-                showAlert('Tugas berhasil dihapus!', 'success');
-                loadTeacherAssignments(); // Refresh list
+                ShowAlert('Tugas Berhasil Dihapus!', 'success');
+                LoadTeacherAssignments(); // Refresh list
             } catch (error) {
                 console.error('Delete assignment error:', error);
-                showAlert('Gagal menghapus tugas', 'error');
+                ShowAlert('Gagal Menghapus Tugas', 'error');
             }
         }
         
         // Fungsi untuk memuat data pengguna (admin)
-        async function loadUsers() {
-            usersTableBody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500"><i data-lucide="loader" class="w-6 h-6 text-gray-400 mx-auto mb-2 animate-spin"></i>Memuat data pengguna...</td></tr>';
+        async function LoadUsers() {
+            usersTableBody.innerHTML = '<tr><td colspan="6" class="px-3 py-4 md:px-6 md:py-8 text-center text-gray-500 dark:text-gray-400"><i data-lucide="loader" class="w-5 h-5 md:w-6 md:h-6 text-gray-400 mx-auto mb-1 md:mb-2 animate-spin"></i><span class="capitalize-first">Memuat Data Pengguna...</span></td></tr>';
             lucide.createIcons();
             
             try {
@@ -1626,9 +1999,9 @@
                 if (users.length === 0) {
                     usersTableBody.innerHTML = `
                         <tr>
-                            <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-                                <i data-lucide="users" class="w-8 h-8 text-gray-400 mx-auto mb-2"></i>
-                                <p>Belum ada data pengguna</p>
+                            <td colspan="6" class="px-3 py-4 md:px-6 md:py-8 text-center text-gray-500 dark:text-gray-400">
+                                <i data-lucide="users" class="w-6 h-6 md:w-8 md:h-8 text-gray-400 mx-auto mb-1 md:mb-2"></i>
+                                <p class="capitalize-first">Belum Ada Data Pengguna</p>
                             </td>
                         </tr>
                     `;
@@ -1637,24 +2010,24 @@
                 }
 
                 usersTableBody.innerHTML = users.map(user => `
-                    <tr class="hover:bg-gray-50 transition-colors duration-300">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">${user.user_id}</span>
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-300">
+                        <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap">
+                            <span class="bg-primary text-white px-2 py-1 md:px-3 md:py-1 rounded-full text-xs font-semibold">${user.user_id}</span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap font-medium text-dark">${user.name}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-500">${user.email || '-'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="bg-secondary text-white px-3 py-1 rounded-full text-xs font-semibold">${user.role}</span>
+                        <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap font-medium text-dark dark:text-white text-sm">${user.name}</td>
+                        <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-gray-500 dark:text-gray-400 text-sm">${user.email || '-'}</td>
+                        <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap">
+                            <span class="bg-secondary text-white px-2 py-1 md:px-3 md:py-1 rounded-full text-xs font-semibold capitalize-first">${user.role}</span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">Aktif</span>
+                        <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap">
+                            <span class="bg-green-100 text-green-800 px-2 py-1 md:px-3 md:py-1 rounded-full text-xs font-semibold">Aktif</span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex gap-2">
-                                <button class="border-2 border-primary text-primary px-3 py-1 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 text-sm">
+                        <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap">
+                            <div class="flex gap-1 md:gap-2">
+                                <button class="border-2 border-primary text-primary px-2 py-1 md:px-3 md:py-1 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 text-xs">
                                     <i data-lucide="edit" class="icon"></i>
                                 </button>
-                                <button class="border-2 border-danger text-danger px-3 py-1 rounded-lg font-semibold hover:bg-danger hover:text-white transition-all duration-300 text-sm" onclick="deleteUser('${user.user_id}')">
+                                <button class="border-2 border-danger text-danger px-2 py-1 md:px-3 md:py-1 rounded-lg font-semibold hover:bg-danger hover:text-white transition-all duration-300 text-xs" onclick="DeleteUser('${user.user_id}')">
                                     <i data-lucide="trash-2" class="icon"></i>
                                 </button>
                             </div>
@@ -1667,9 +2040,9 @@
                 console.error('Load users error:', error);
                 usersTableBody.innerHTML = `
                     <tr>
-                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-                            <i data-lucide="alert-circle" class="w-6 h-6 text-red-500 mx-auto mb-2"></i>
-                            <p>Gagal memuat data pengguna</p>
+                        <td colspan="6" class="px-3 py-4 md:px-6 md:py-8 text-center text-gray-500 dark:text-gray-400">
+                            <i data-lucide="alert-circle" class="w-5 h-5 md:w-6 md:h-6 text-red-500 mx-auto mb-1 md:mb-2"></i>
+                            <p class="capitalize-first">Gagal Memuat Data Pengguna</p>
                         </td>
                     </tr>
                 `;
@@ -1678,8 +2051,8 @@
         }
 
         // Fungsi untuk menghapus user
-        async function deleteUser(userId) {
-            if (!confirm('Apakah Anda yakin ingin menghapus pengguna ini?')) return;
+        async function DeleteUser(userId) {
+            if (!confirm('Apakah Anda Yakin Ingin Menghapus Pengguna Ini?')) return;
             
             try {
                 const { error } = await supabase
@@ -1689,34 +2062,34 @@
 
                 if (error) throw error;
 
-                showAlert('Pengguna berhasil dihapus!', 'success');
-                loadUsers(); // Refresh list
+                ShowAlert('Pengguna Berhasil Dihapus!', 'success');
+                LoadUsers(); // Refresh list
             } catch (error) {
                 console.error('Delete user error:', error);
-                showAlert('Gagal menghapus pengguna', 'error');
+                ShowAlert('Gagal Menghapus Pengguna', 'error');
             }
         }
         
         // Fungsi untuk memuat data mata pelajaran (admin)
-        async function loadSubjects() {
-            subjectsTableBody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500"><i data-lucide="loader" class="w-6 h-6 text-gray-400 mx-auto mb-2 animate-spin"></i>Memuat data mata pelajaran...</td></tr>';
+        async function LoadSubjects() {
+            subjectsTableBody.innerHTML = '<tr><td colspan="5" class="px-3 py-4 md:px-6 md:py-8 text-center text-gray-500 dark:text-gray-400"><i data-lucide="loader" class="w-5 h-5 md:w-6 md:h-6 text-gray-400 mx-auto mb-1 md:mb-2 animate-spin"></i><span class="capitalize-first">Memuat Data Mata Pelajaran...</span></td></tr>';
             lucide.createIcons();
             
             setTimeout(() => {
                 subjectsTableBody.innerHTML = `
-                    <tr class="hover:bg-gray-50 transition-colors duration-300">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">MAT-10</span>
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-300">
+                        <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap">
+                            <span class="bg-primary text-white px-2 py-1 md:px-3 md:py-1 rounded-full text-xs font-semibold">MAT-10</span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap font-medium text-dark">Matematika</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-500">Budi Santoso</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-500">30</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex gap-2">
-                                <button class="border-2 border-primary text-primary px-3 py-1 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 text-sm">
+                        <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap font-medium text-dark dark:text-white text-sm">Matematika</td>
+                        <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-gray-500 dark:text-gray-400 text-sm">Budi Santoso</td>
+                        <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap text-gray-500 dark:text-gray-400 text-sm">30</td>
+                        <td class="px-3 py-2 md:px-6 md:py-4 whitespace-nowrap">
+                            <div class="flex gap-1 md:gap-2">
+                                <button class="border-2 border-primary text-primary px-2 py-1 md:px-3 md:py-1 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 text-xs">
                                     <i data-lucide="edit" class="icon"></i>
                                 </button>
-                                <button class="border-2 border-danger text-danger px-3 py-1 rounded-lg font-semibold hover:bg-danger hover:text-white transition-all duration-300 text-sm">
+                                <button class="border-2 border-danger text-danger px-2 py-1 md:px-3 md:py-1 rounded-lg font-semibold hover:bg-danger hover:text-white transition-all duration-300 text-xs">
                                     <i data-lucide="trash-2" class="icon"></i>
                                 </button>
                             </div>
@@ -1728,29 +2101,29 @@
         }
         
         // Fungsi untuk import CSV
-        async function importCSV(e) {
+        async function ImportCSV(e) {
             e.preventDefault();
             const fileInput = document.getElementById('csv-file');
             if (fileInput.files.length > 0) {
-                showAlert('Data siswa berhasil diimport!', 'success');
+                ShowAlert('Data Siswa Berhasil Diimport!', 'success');
                 fileInput.value = '';
             } else {
-                showAlert('Pilih file CSV terlebih dahulu', 'error');
+                ShowAlert('Pilih File CSV Terlebih Dahulu', 'error');
             }
         }
         
         // Fungsi untuk download template
-        function downloadTemplate() {
-            showAlert('Template berhasil didownload!', 'success');
+        function DownloadTemplate() {
+            ShowAlert('Template Berhasil Didownload!', 'success');
         }
         
         // Fungsi untuk menampilkan modal tambah mata pelajaran
-        function showAddSubjectModal() {
-            showAlert('Fitur tambah mata pelajaran akan segera tersedia', 'warning');
+        function ShowAddSubjectModal() {
+            ShowAlert('Fitur Tambah Mata Pelajaran Akan Segera Tersedia', 'warning');
         }
         
         // Fungsi untuk memuat statistik
-        async function loadStats() {
+        async function LoadStats() {
             // Hitung total users
             const { data: users, error: usersError } = await supabase
                 .from('users')

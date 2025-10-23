@@ -843,9 +843,6 @@
                     </label>
                     <input type="text" id="login-userid" required placeholder="Masukkan User ID Anda"
                            class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-700 text-dark dark:text-white">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 md:mt-2 capitalize-first">
-                        Guru/Developer: Gunakan ID Yang Diberikan
-                    </p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-dark dark:text-white mb-2 flex items-center gap-2 capitalize-first">
@@ -854,18 +851,6 @@
                     </label>
                     <input type="password" id="login-password" required placeholder="Masukkan Password"
                            class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-700 text-dark dark:text-white">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-dark dark:text-white mb-2 flex items-center gap-2 capitalize-first">
-                        <i data-lucide="user" class="icon text-gray-500 hidden md:block"></i>
-                        Peran
-                    </label>
-                    <select id="login-role" required
-                            class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-700 text-dark dark:text-white">
-                        <option value="">Pilih Peran</option>
-                        <option value="teacher">Guru</option>
-                        <option value="admin">Developer/Admin</option>
-                    </select>
                 </div>
                 <button type="submit" class="w-full bg-primary text-white py-2 md:py-3 rounded-lg md:rounded-xl font-semibold hover:bg-primary-dark transition-all duration-300 flex items-center justify-center gap-2 capitalize-first">
                     <i data-lucide="rocket" class="icon"></i>
@@ -880,10 +865,11 @@
                         <p><strong>Admin:</strong> admin / admin123</p>
                         <p><strong>Guru:</strong> guru001 / guru123</p>
                         <p><strong>Guru:</strong> guru002 / guru123</p>
+                        <p><strong>Siswa:</strong> siswa001 / siswa123</p>
                     </div>
                 </div>
                 <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 text-center capitalize-first">
-                    Siswa Tidak Perlu Login. Gunakan ID Siswa Untuk Mengumpulkan Tugas.
+                    Semua Pengguna Dapat Login Dengan User ID Dan Password.
                 </p>
             </div>
         </div>
@@ -923,6 +909,7 @@
                     <select id="new-user-role" required
                             class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-700 text-dark dark:text-white">
                         <option value="">Pilih Peran</option>
+                        <option value="admin">Admin</option>
                         <option value="teacher">Guru</option>
                         <option value="student">Siswa</option>
                     </select>
@@ -1640,34 +1627,33 @@
             lucide.createIcons();
         }
         
-        // Fungsi untuk login dengan Supabase
+        // Fungsi untuk login dengan Supabase - TANPA PILIH PERAN
         async function Login(e) {
             e.preventDefault();
             
             const userid = document.getElementById('login-userid').value;
             const password = document.getElementById('login-password').value;
-            const role = document.getElementById('login-role').value;
             
             try {
-                if (userid && password && role) {
-                    // Gunakan Supabase untuk autentikasi
+                if (userid && password) {
+                    // Gunakan Supabase untuk autentikasi - cari user berdasarkan user_id dan password
                     const { data, error } = await supabase
                         .from('users')
                         .select('*')
                         .eq('user_id', userid)
                         .eq('password', password)
-                        .eq('role', role);
+                        .single();
 
                     if (error) {
                         console.error('Supabase error:', error);
-                        throw new Error('Terjadi Kesalahan Saat Login');
+                        throw new Error('User ID Atau Password Salah');
                     }
                     
-                    if (!data || data.length === 0) {
+                    if (!data) {
                         throw new Error('User ID Atau Password Salah');
                     }
 
-                    const userData = data[0];
+                    const userData = data;
                     
                     // Login berhasil
                     currentUser = {
@@ -1857,30 +1843,73 @@
             }
         }
         
-        // Fungsi untuk memuat tugas
+        // Fungsi untuk memuat tugas siswa
         async function LoadStudentAssignments() {
             studentAssignmentsList.innerHTML = '<div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 text-center shadow-lg border dark:border-gray-600"><i data-lucide="loader" class="w-6 h-6 md:w-8 md:h-8 text-gray-400 mx-auto mb-2 md:mb-3 animate-spin"></i><p class="text-gray-600 dark:text-gray-300 capitalize-first">Memuat Daftar Tugas...</p></div>';
             lucide.createIcons();
             
-            setTimeout(() => {
-                studentAssignmentsList.innerHTML = `
-                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 shadow-lg border hover:shadow-xl transition-all duration-300 border-l-4 border-primary">
-                        <h3 class="text-lg md:text-xl font-bold text-dark dark:text-white mb-2 md:mb-3">Matematika - Persamaan Kuadrat</h3>
-                        <p class="text-gray-600 dark:text-gray-300 text-sm mb-3 md:mb-4">Selesaikan Soal-Soal Persamaan Kuadrat Pada Halaman 45-46 Buku Paket.</p>
+            try {
+                // Get assignments for student from Supabase
+                const { data: assignments, error } = await supabase
+                    .from('assignments')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (assignments.length === 0) {
+                    studentAssignmentsList.innerHTML = `
+                        <div class="bg-white dark:bg-gray-700 rounded-xl p-6 md:p-8 text-center shadow-lg border dark:border-gray-600">
+                            <i data-lucide="clipboard-list" class="w-8 h-8 md:w-12 md:h-12 text-gray-400 mx-auto mb-3 md:mb-4"></i>
+                            <p class="text-gray-600 dark:text-gray-300 mb-3 md:mb-4">Belum Ada Tugas Yang Tersedia</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                    return;
+                }
+
+                // Render assignments for student
+                studentAssignmentsList.innerHTML = assignments.map(assignment => `
+                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 shadow-lg border hover:shadow-xl transition-all duration-300 border-l-4 border-primary mb-3 md:mb-4">
+                        <div class="flex justify-between items-start mb-2 md:mb-3">
+                            <h3 class="text-lg md:text-xl font-bold text-dark dark:text-white">${assignment.subject} - ${assignment.title}</h3>
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold capitalize">${assignment.assignment_type}</span>
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-300 text-sm mb-3 md:mb-4">${assignment.description}</p>
                         <div class="flex flex-wrap gap-2 md:gap-4 text-xs md:text-sm text-gray-500 mb-3 md:mb-4">
-                            <span class="flex items-center gap-1"><i data-lucide="calendar" class="icon"></i> Batas: 25 Des 2024, 23:59</span>
-                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-semibold">Belum Dikumpulkan</span>
+                            <span class="flex items-center gap-1">
+                                <i data-lucide="calendar" class="icon"></i> 
+                                Batas: ${new Date(assignment.deadline).toLocaleDateString('id-ID')}
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <i data-lucide="award" class="icon"></i>
+                                Nilai Maks: ${assignment.max_score}
+                            </span>
                         </div>
                         <div class="flex gap-2 md:gap-3 flex-wrap">
-                            <button class="bg-secondary text-white px-3 py-1 md:px-4 md:py-2 rounded-lg font-semibold hover:bg-green-600 transition-all duration-300 text-xs md:text-sm flex items-center gap-1 md:gap-2 mobile-full justify-center">
+                            <button class="bg-secondary text-white px-3 py-1 md:px-4 md:py-2 rounded-lg font-semibold hover:bg-green-600 transition-all duration-300 text-xs md:text-sm flex items-center gap-1 md:gap-2">
                                 <i data-lucide="send" class="icon"></i>
                                 Kumpulkan Tugas
                             </button>
+                            <button class="border-2 border-primary text-primary dark:text-primary px-3 py-1 md:px-4 md:py-2 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 text-xs md:text-sm flex items-center gap-1 md:gap-2">
+                                <i data-lucide="eye" class="icon"></i>
+                                Lihat Detail
+                            </button>
                         </div>
+                    </div>
+                `).join('');
+                
+                lucide.createIcons();
+            } catch (error) {
+                console.error('Load student assignments error:', error);
+                studentAssignmentsList.innerHTML = `
+                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 text-center shadow-lg border dark:border-gray-600">
+                        <i data-lucide="alert-circle" class="w-6 h-6 md:w-8 md:h-8 text-red-500 mx-auto mb-2 md:mb-3"></i>
+                        <p class="text-gray-600 dark:text-gray-300">Gagal Memuat Daftar Tugas</p>
                     </div>
                 `;
                 lucide.createIcons();
-            }, 1000);
+            }
         }
         
         // Fungsi untuk memuat tugas guru

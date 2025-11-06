@@ -1426,6 +1426,9 @@
             // Refresh icons
             lucide.createIcons();
             
+            // Inisialisasi data default
+            await InitializeDefaultData();
+            
             // Cek jika ada user yang sudah login (dari localStorage)
             const savedUser = localStorage.getItem('currentUser');
             if (savedUser) {
@@ -1462,6 +1465,71 @@
                 LoadContentBasedOnRole();
                 LoadStats();
                 ShowAlert(`Selamat Datang Kembali, ${currentUser.name}!`, 'success');
+            }
+        }
+        
+        async function InitializeDefaultData() {
+            try {
+                // Cek apakah sudah ada data admin
+                const { data: existingAdmins, error: checkError } = await supabase
+                    .from('users')
+                    .select('user_id')
+                    .eq('role', 'admin');
+
+                if (checkError) throw checkError;
+
+                // Jika belum ada admin, buat data default
+                if (!existingAdmins || existingAdmins.length === 0) {
+                    const defaultUsers = [
+                        {
+                            user_id: 'admin',
+                            name: 'Administrator',
+                            password: 'admin123',
+                            role: 'admin',
+                            email: 'admin@tugasmu.sch.id'
+                        },
+                        {
+                            user_id: 'guru001',
+                            name: 'Budi Santoso',
+                            password: 'guru123',
+                            role: 'teacher',
+                            email: 'budi.santoso@tugasmu.sch.id'
+                        },
+                        {
+                            user_id: 'guru002',
+                            name: 'Siti Rahayu',
+                            password: 'guru123',
+                            role: 'teacher',
+                            email: 'siti.rahayu@tugasmu.sch.id'
+                        },
+                        {
+                            user_id: 'siswa001',
+                            name: 'Andi Wijaya',
+                            password: 'siswa123',
+                            role: 'student',
+                            email: 'andi.wijaya@tugasmu.sch.id',
+                            class: '10 IPA 1'
+                        },
+                        {
+                            user_id: 'siswa002',
+                            name: 'Rina Melati',
+                            password: 'siswa123',
+                            role: 'student',
+                            email: 'rina.melati@tugasmu.sch.id',
+                            class: '10 IPA 1'
+                        }
+                    ];
+
+                    const { error: insertError } = await supabase
+                        .from('users')
+                        .insert(defaultUsers);
+
+                    if (insertError) throw insertError;
+
+                    console.log('Data default berhasil dibuat');
+                }
+            } catch (error) {
+                console.error('Error initializing default data:', error);
             }
         }
         
@@ -1765,6 +1833,11 @@
             const assignmentType = document.getElementById('assignment-type').value;
             
             try {
+                // Validasi input
+                if (!title || !description || !deadline || !subject) {
+                    throw new Error('Semua field harus diisi');
+                }
+
                 // Insert assignment ke Supabase
                 const { data: assignmentData, error: assignmentError } = await supabase
                     .from('assignments')
@@ -1776,7 +1849,8 @@
                             subject: subject,
                             max_score: parseInt(maxScore),
                             created_by: currentUser.id,
-                            assignment_type: assignmentType
+                            assignment_type: assignmentType,
+                            status: 'active'
                         }
                     ])
                     .select();
@@ -1843,13 +1917,189 @@
             }
         }
         
+        async function SubmitAssignment(assignmentId) {
+            try {
+                // Untuk tugas file upload
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = '.pdf,.doc,.docx,.jpg,.jpeg,.png';
+                
+                fileInput.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        // Upload file ke Supabase Storage
+                        const fileName = `${assignmentId}_${currentUser.id}_${Date.now()}_${file.name}`;
+                        const { data: uploadData, error: uploadError } = await supabase
+                            .storage
+                            .from('submissions')
+                            .upload(fileName, file);
+
+                        if (uploadError) throw uploadError;
+
+                        // Simpan data submission
+                        const { error: submissionError } = await supabase
+                            .from('submissions')
+                            .insert([
+                                {
+                                    assignment_id: assignmentId,
+                                    student_id: currentUser.id,
+                                    file_path: fileName,
+                                    submitted_at: new Date().toISOString(),
+                                    status: 'submitted'
+                                }
+                            ]);
+
+                        if (submissionError) throw submissionError;
+
+                        ShowAlert('Tugas Berhasil Dikumpulkan!', 'success');
+                        LoadStudentAssignments();
+                    }
+                };
+                
+                fileInput.click();
+            } catch (error) {
+                console.error('Submit assignment error:', error);
+                ShowAlert('Gagal Mengumpulkan Tugas: ' + error.message, 'error');
+            }
+        }
+
+        async function ViewAssignmentDetail(assignmentId) {
+            try {
+                // Get assignment details
+                const { data: assignment, error: assignmentError } = await supabase
+                    .from('assignments')
+                    .select('*')
+                    .eq('id', assignmentId)
+                    .single();
+
+                if (assignmentError) throw assignmentError;
+
+                // Get questions if multiple choice
+                let questions = [];
+                if (assignment.assignment_type === 'multiple_choice') {
+                    const { data: questionsData, error: questionsError } = await supabase
+                        .from('assignment_questions')
+                        .select('*')
+                        .eq('assignment_id', assignmentId);
+
+                    if (!questionsError) {
+                        questions = questionsData;
+                    }
+                }
+
+                // Show assignment detail modal
+                ShowAssignmentDetailModal(assignment, questions);
+            } catch (error) {
+                console.error('View assignment detail error:', error);
+                ShowAlert('Gagal Memuat Detail Tugas', 'error');
+            }
+        }
+
+        function ShowAssignmentDetailModal(assignment, questions) {
+            const modalHTML = `
+                <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl md:rounded-3xl p-6 md:p-8 max-w-2xl w-full mx-auto animate-fade-in max-h-[90vh] overflow-y-auto">
+                        <div class="flex justify-between items-center mb-4 md:mb-6">
+                            <h2 class="text-xl md:text-2xl font-bold text-dark dark:text-white">${assignment.title}</h2>
+                            <button class="close-detail text-xl md:text-2xl text-gray-500 dark:text-gray-400 hover:text-dark dark:hover:text-white">
+                                <i data-lucide="x" class="icon-lg"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="space-y-4 md:space-y-6">
+                            <div>
+                                <h3 class="text-lg font-semibold text-dark dark:text-white mb-2">Deskripsi</h3>
+                                <p class="text-gray-600 dark:text-gray-300">${assignment.description}</p>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-dark dark:text-white mb-2">Informasi Tugas</h3>
+                                    <div class="space-y-2">
+                                        <p class="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                                            <i data-lucide="book-open" class="icon"></i>
+                                            Mata Pelajaran: ${assignment.subject}
+                                        </p>
+                                        <p class="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                                            <i data-lucide="calendar" class="icon"></i>
+                                            Batas Waktu: ${new Date(assignment.deadline).toLocaleString('id-ID')}
+                                        </p>
+                                        <p class="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                                            <i data-lucide="award" class="icon"></i>
+                                            Nilai Maksimal: ${assignment.max_score}
+                                        </p>
+                                        <p class="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                                            <i data-lucide="list" class="icon"></i>
+                                            Tipe: ${assignment.assignment_type}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            ${questions.length > 0 ? `
+                                <div>
+                                    <h3 class="text-lg font-semibold text-dark dark:text-white mb-2">Soal Pilihan Ganda</h3>
+                                    <div class="space-y-4">
+                                        ${questions.map((question, index) => `
+                                            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                                <p class="font-medium text-dark dark:text-white mb-3">${index + 1}. ${question.question_text}</p>
+                                                <div class="space-y-2">
+                                                    ${Object.entries(question.options).map(([key, value]) => `
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="w-6 h-6 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 text-sm font-medium">
+                                                                ${key}
+                                                            </span>
+                                                            <span class="text-gray-600 dark:text-gray-300">${value}</span>
+                                                            ${key === question.correct_answer ? 
+                                                                '<i data-lucide="check-circle" class="icon text-green-500"></i>' : ''}
+                                                        </div>
+                                                    `).join('')}
+                                                </div>
+                                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                                                    Nilai: ${question.max_score} point
+                                                </p>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        ${currentUser.role === 'student' ? `
+                            <div class="mt-6 md:mt-8 flex justify-end">
+                                <button class="bg-primary text-white px-4 py-2 md:px-6 md:py-3 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-300"
+                                        onclick="SubmitAssignment('${assignment.id}')">
+                                    <i data-lucide="send" class="icon"></i>
+                                    Kumpulkan Tugas
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            lucide.createIcons();
+            
+            // Add event listener untuk close button
+            document.querySelector('.close-detail').addEventListener('click', () => {
+                document.querySelector('.fixed.inset-0').remove();
+            });
+            
+            // Close modal when clicking outside
+            document.querySelector('.fixed.inset-0').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) {
+                    e.currentTarget.remove();
+                }
+            });
+        }
+
         // Fungsi untuk memuat tugas siswa
         async function LoadStudentAssignments() {
             studentAssignmentsList.innerHTML = '<div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 text-center shadow-lg border dark:border-gray-600"><i data-lucide="loader" class="w-6 h-6 md:w-8 md:h-8 text-gray-400 mx-auto mb-2 md:mb-3 animate-spin"></i><p class="text-gray-600 dark:text-gray-300 capitalize-first">Memuat Daftar Tugas...</p></div>';
             lucide.createIcons();
             
             try {
-                // Get assignments for student from Supabase
                 const { data: assignments, error } = await supabase
                     .from('assignments')
                     .select('*')
@@ -1869,35 +2119,46 @@
                 }
 
                 // Render assignments for student
-                studentAssignmentsList.innerHTML = assignments.map(assignment => `
-                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 shadow-lg border hover:shadow-xl transition-all duration-300 border-l-4 border-primary mb-3 md:mb-4">
-                        <div class="flex justify-between items-start mb-2 md:mb-3">
-                            <h3 class="text-lg md:text-xl font-bold text-dark dark:text-white">${assignment.subject} - ${assignment.title}</h3>
-                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold capitalize">${assignment.assignment_type}</span>
+                studentAssignmentsList.innerHTML = assignments.map(assignment => {
+                    const isOverdue = new Date(assignment.deadline) < new Date();
+                    const statusClass = isOverdue ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
+                    const statusText = isOverdue ? 'Terlambat' : 'Aktif';
+                    
+                    return `
+                        <div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 shadow-lg border hover:shadow-xl transition-all duration-300 border-l-4 border-primary mb-3 md:mb-4">
+                            <div class="flex justify-between items-start mb-2 md:mb-3">
+                                <h3 class="text-lg md:text-xl font-bold text-dark dark:text-white">${assignment.subject} - ${assignment.title}</h3>
+                                <div class="flex gap-2">
+                                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold capitalize">${assignment.assignment_type}</span>
+                                    <span class="${statusClass} px-2 py-1 rounded-full text-xs font-semibold">${statusText}</span>
+                                </div>
+                            </div>
+                            <p class="text-gray-600 dark:text-gray-300 text-sm mb-3 md:mb-4">${assignment.description}</p>
+                            <div class="flex flex-wrap gap-2 md:gap-4 text-xs md:text-sm text-gray-500 mb-3 md:mb-4">
+                                <span class="flex items-center gap-1">
+                                    <i data-lucide="calendar" class="icon"></i> 
+                                    Batas: ${new Date(assignment.deadline).toLocaleDateString('id-ID')}
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <i data-lucide="award" class="icon"></i>
+                                    Nilai Maks: ${assignment.max_score}
+                                </span>
+                            </div>
+                            <div class="flex gap-2 md:gap-3 flex-wrap">
+                                <button class="bg-secondary text-white px-3 py-1 md:px-4 md:py-2 rounded-lg font-semibold hover:bg-green-600 transition-all duration-300 text-xs md:text-sm flex items-center gap-1 md:gap-2"
+                                        onclick="SubmitAssignment('${assignment.id}')">
+                                    <i data-lucide="send" class="icon"></i>
+                                    Kumpulkan Tugas
+                                </button>
+                                <button class="border-2 border-primary text-primary dark:text-primary px-3 py-1 md:px-4 md:py-2 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 text-xs md:text-sm flex items-center gap-1 md:gap-2"
+                                        onclick="ViewAssignmentDetail('${assignment.id}')">
+                                    <i data-lucide="eye" class="icon"></i>
+                                    Lihat Detail
+                                </button>
+                            </div>
                         </div>
-                        <p class="text-gray-600 dark:text-gray-300 text-sm mb-3 md:mb-4">${assignment.description}</p>
-                        <div class="flex flex-wrap gap-2 md:gap-4 text-xs md:text-sm text-gray-500 mb-3 md:mb-4">
-                            <span class="flex items-center gap-1">
-                                <i data-lucide="calendar" class="icon"></i> 
-                                Batas: ${new Date(assignment.deadline).toLocaleDateString('id-ID')}
-                            </span>
-                            <span class="flex items-center gap-1">
-                                <i data-lucide="award" class="icon"></i>
-                                Nilai Maks: ${assignment.max_score}
-                            </span>
-                        </div>
-                        <div class="flex gap-2 md:gap-3 flex-wrap">
-                            <button class="bg-secondary text-white px-3 py-1 md:px-4 md:py-2 rounded-lg font-semibold hover:bg-green-600 transition-all duration-300 text-xs md:text-sm flex items-center gap-1 md:gap-2">
-                                <i data-lucide="send" class="icon"></i>
-                                Kumpulkan Tugas
-                            </button>
-                            <button class="border-2 border-primary text-primary dark:text-primary px-3 py-1 md:px-4 md:py-2 rounded-lg font-semibold hover:bg-primary hover:text-white transition-all duration-300 text-xs md:text-sm flex items-center gap-1 md:gap-2">
-                                <i data-lucide="eye" class="icon"></i>
-                                Lihat Detail
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
                 
                 lucide.createIcons();
             } catch (error) {
@@ -1911,7 +2172,7 @@
                 lucide.createIcons();
             }
         }
-        
+
         // Fungsi untuk memuat tugas guru
         async function LoadTeacherAssignments() {
             teacherAssignmentsList.innerHTML = '<div class="bg-white dark:bg-gray-700 rounded-xl p-4 md:p-6 text-center shadow-lg border dark:border-gray-600"><i data-lucide="loader" class="w-6 h-6 md:w-8 md:h-8 text-gray-400 mx-auto mb-2 md:mb-3 animate-spin"></i><p class="text-gray-600 dark:text-gray-300 capitalize-first">Memuat Daftar Tugas...</p></div>';

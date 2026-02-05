@@ -1,10 +1,13 @@
-// Edit file ini sekali aja. Semua halaman akan otomatis pakai config yang sama.
-// Catatan: jangan publish anon key ke repo private? Anon key aman untuk client,
-// yang penting RLS kamu bener. Jangan pernah taruh service_role key di client.
+// Tugasmu config (edit sekali)
+// - Untuk GitHub Pages: biasanya aman.
+// - Jangan taruh SERVICE_ROLE key di client.
+// - Anon key aman untuk client SELAMA RLS benar.
 
 window.__ENV__ = {
   APP_NAME: "Tugasmu",
-  SUPABASE_URL: "https://stvasgalfivxlwullqgs.supabase.co",
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0dmFzZ2FsZml2eGx3dWxscWdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMzg3NDMsImV4cCI6MjA4NTgxNDc0M30.B13VAQ50PEUAHmPzHavMZr5nOhosI6CpLsr_4nrnBDw",
+  // Optional: kalau kamu deploy di subfolder (project pages), isi BASE_PATH, contoh: "/tugasmu"
+  BASE_PATH: "",
+  SUPABASE_URL: "YOUR_SUPABASE_URL",
+  SUPABASE_ANON_KEY: "YOUR_SUPABASE_ANON_KEY",
   STORAGE_BUCKET: "submissions",
 };

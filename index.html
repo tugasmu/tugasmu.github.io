@@ -17,13 +17,13 @@
     --brand: #4f46e5; /* indigo-600 */
   }
   html { scroll-behavior: smooth; }
-  body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; }
-  /* Better mobile viewport behavior */
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+      "Apple Color Emoji","Segoe UI Emoji";
+  }
   .min-dvh { min-height: 100dvh; }
-  /* Safe areas */
   .safe-pb { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); }
   .safe-pt { padding-top: calc(env(safe-area-inset-top, 0px) + 0px); }
-  /* Reduce motion */
   @media (prefers-reduced-motion: reduce) {
     * { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
   }
@@ -32,10 +32,9 @@
 </head>
 <body class="bg-slate-50 text-slate-900">
   <div class="min-dvh safe-pt">
-    <!-- Topbar -->
     <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/85 backdrop-blur">
       <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-        <a href="./index.html" class="flex items-center gap-3">
+        <a href="./" class="flex items-center gap-3">
           <div class="h-9 w-9 rounded-2xl bg-slate-900"></div>
           <div class="leading-tight">
             <div class="text-sm font-semibold">Tugasmu</div>
@@ -44,14 +43,13 @@
         </a>
 
         <div class="flex items-center gap-2">
-          <a href="./login.html" class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+          <a id="btn-login" href="./log/" class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
             Masuk
           </a>
         </div>
       </div>
     </header>
 
-    <!-- Content -->
     <main class="mx-auto max-w-6xl px-4 py-10 safe-pb">
       <div class="grid gap-8 lg:grid-cols-2 lg:items-start">
         <section>
@@ -60,12 +58,11 @@
           </h1>
           <p class="mt-3 max-w-xl text-base text-slate-600">
             Guru bikin tugas & nilai. Siswa kumpulkan file. Admin kelola mapel & role.
-            Semua aman pakai Supabase Auth + RLS.
           </p>
 
           <div class="mt-6 flex flex-wrap gap-2">
-            <a href="./login.html" class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
-              Mulai sekarang
+            <a id="btn-start" href="./log/" class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+              Mulai
             </a>
             <a href="#fitur" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50">
               Lihat fitur
@@ -75,7 +72,7 @@
           <div id="fitur" class="mt-10 grid gap-3 sm:grid-cols-3">
             <div class="rounded-2xl border border-slate-200 bg-white p-4">
               <div class="text-sm font-semibold">Aman</div>
-              <div class="mt-1 text-sm text-slate-600">Auth + RLS, akses sesuai peran.</div>
+              <div class="mt-1 text-sm text-slate-600">Akses sesuai peran (RLS).</div>
             </div>
             <div class="rounded-2xl border border-slate-200 bg-white p-4">
               <div class="text-sm font-semibold">Cepat</div>
@@ -83,35 +80,30 @@
             </div>
             <div class="rounded-2xl border border-slate-200 bg-white p-4">
               <div class="text-sm font-semibold">Rapi</div>
-              <div class="mt-1 text-sm text-slate-600">Tugas & status enak dibaca.</div>
+              <div class="mt-1 text-sm text-slate-600">UI padat, mudah dicari.</div>
             </div>
           </div>
         </section>
 
         <section class="rounded-3xl border border-slate-200 bg-white p-6">
-          <div class="text-sm font-semibold">Ringkasnya…</div>
-          <p class="mt-2 text-sm text-slate-600">
-            Ini versi “serius” dari project kamu: UI lebih clean, auth beneran pakai Supabase,
-            dan layout mobile-first.
-          </p>
-
-          <div class="mt-5 space-y-3 text-sm">
+          <div class="text-sm font-semibold">Yang bisa kamu kelola</div>
+          <div class="mt-4 space-y-3 text-sm">
             <div class="rounded-2xl bg-slate-50 p-4">
-              <div class="font-semibold">Siswa</div>
-              <div class="mt-1 text-slate-600">Lihat tugas, upload file, cek status.</div>
+              <div class="font-semibold">Tugas</div>
+              <div class="mt-1 text-slate-600">CRUD tugas (buat, edit, hapus), deadline, tipe.</div>
             </div>
             <div class="rounded-2xl bg-slate-50 p-4">
-              <div class="font-semibold">Guru</div>
-              <div class="mt-1 text-slate-600">Buat tugas, lihat pengumpulan, beri nilai.</div>
+              <div class="font-semibold">Pengumpulan</div>
+              <div class="mt-1 text-slate-600">Upload file, resubmit sebelum deadline, nilai & feedback.</div>
             </div>
             <div class="rounded-2xl bg-slate-50 p-4">
-              <div class="font-semibold">Admin</div>
-              <div class="mt-1 text-slate-600">Kelola mapel & role pengguna.</div>
+              <div class="font-semibold">Manajemen</div>
+              <div class="mt-1 text-slate-600">Admin: mapel & role user.</div>
             </div>
           </div>
 
           <div class="mt-6">
-            <a href="./login.html" class="block w-full rounded-2xl bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-black">
+            <a href="./log/" class="block w-full rounded-2xl bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-black">
               Masuk ke aplikasi
             </a>
           </div>

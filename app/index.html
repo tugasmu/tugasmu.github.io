@@ -1,1 +1,1077 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>Aplikasi • Tugasmu</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+<style>
+  :root{
+    --bg: #f8fafc; /* slate-50 */
+    --card: #ffffff;
+    --text: #0f172a; /* slate-900 */
+    --muted: #64748b; /* slate-500 */
+    --border: #e2e8f0; /* slate-200 */
+    --brand: #4f46e5; /* indigo-600 */
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+      "Apple Color Emoji","Segoe UI Emoji";
+  }
+  .min-dvh { min-height: 100dvh; }
+  .safe-pb { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); }
+  .safe-pt { padding-top: calc(env(safe-area-inset-top, 0px) + 0px); }
+  @media (prefers-reduced-motion: reduce) {
+    * { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  }
+</style>
 
+  
+<script>
+  // Robust env loader: works on /log, /app, root, and most GitHub Pages layouts.
+  async function __loadEnv() {
+    if (window.__ENV__) return window.__ENV__;
+
+    const guessRepoBase = () => {
+      // If deployed at https://user.github.io/repo/..., this guesses "/repo"
+      // If deployed at root (user/organization site), BASE_PATH should remain "".
+      const parts = location.pathname.split("/").filter(Boolean);
+      if (!location.hostname.endsWith("github.io")) return "";
+      if (parts.length >= 2 && (parts[0] === "app" || parts[0] === "log")) return ""; // our folders, not repo
+      // If URL looks like /repo/app/..., base is /repo
+      if (parts.length >= 2 && (parts[1] === "app" || parts[1] === "log")) return "/" + parts[0];
+      return "";
+    };
+
+    const repoBase = guessRepoBase();
+    const candidates = [
+      (repoBase || "") + "/env.js",
+      "/env.js",
+      "../env.js",
+      "./env.js",
+    ];
+
+    const tryLoad = (src) => new Promise((resolve) => {
+      const s = document.createElement("script");
+      s.src = src;
+      s.async = true;
+      s.onload = () => resolve(true);
+      s.onerror = () => resolve(false);
+      document.head.appendChild(s);
+    });
+
+    for (const src of candidates) {
+      const ok = await tryLoad(src);
+      if (ok && window.__ENV__) return window.__ENV__;
+    }
+    return null;
+  }
+</script>
+
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div class="min-dvh safe-pt safe-pb">
+    <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/85 backdrop-blur">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+        <a href="../" class="flex items-center gap-3">
+          <div class="h-9 w-9 rounded-2xl bg-slate-900"></div>
+          <div class="leading-tight">
+            <div class="text-sm font-semibold">Tugasmu</div>
+            <div class="text-xs text-slate-500">Aplikasi</div>
+          </div>
+        </a>
+
+        <div class="flex items-center gap-2">
+          <div class="hidden sm:block text-right leading-tight">
+            <div id="me-name" class="text-sm font-semibold">—</div>
+            <div id="me-role" class="text-xs text-slate-500">—</div>
+          </div>
+          <button id="btn-logout" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+            Keluar
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-6xl px-4 py-6">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex gap-1 rounded-2xl border border-slate-200 bg-white p-1">
+          <button class="tab-btn rounded-xl px-3 py-2 text-sm font-semibold" data-tab="tasks">Tugas</button>
+          <button id="tab-subjects" class="tab-btn hidden rounded-xl px-3 py-2 text-sm font-semibold" data-tab="subjects">Mapel</button>
+          <button id="tab-users" class="tab-btn hidden rounded-xl px-3 py-2 text-sm font-semibold" data-tab="users">Users</button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <div class="relative hidden sm:block">
+            <input id="q" class="w-72 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+              placeholder="Cari tugas…" />
+          </div>
+          <button id="btn-create" class="hidden rounded-2xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+            Buat tugas
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-3 sm:hidden">
+        <input id="q-m" class="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+          placeholder="Cari tugas…" />
+      </div>
+
+      <!-- Tasks -->
+      <section id="tab-tasks" class="mt-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-lg font-semibold">Daftar tugas</div>
+            <div class="text-sm text-slate-600">Terbaru duluan.</div>
+          </div>
+          <button id="btn-refresh" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+            Refresh
+          </button>
+        </div>
+
+        <div id="tasks-list" class="mt-4 space-y-3"></div>
+      </section>
+
+      <!-- Subjects -->
+      <section id="tab-subjects-panel" class="mt-5 hidden">
+        <div class="rounded-3xl border border-slate-200 bg-white p-5">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <div class="text-lg font-semibold">Mapel</div>
+              <div class="text-sm text-slate-600">Tambah, edit, hapus mapel.</div>
+            </div>
+            <button id="btn-load-subjects" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+              Refresh
+            </button>
+          </div>
+
+          <form id="form-subject" class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input id="subject-name" class="w-full flex-1 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+              placeholder="Tambah mapel (mis. PJOK)" />
+            <button class="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black" type="submit">Tambah</button>
+          </form>
+
+          <div id="subjects-list" class="mt-4 divide-y divide-slate-100"></div>
+        </div>
+      </section>
+
+      <!-- Users -->
+      <section id="tab-users-panel" class="mt-5 hidden">
+        <div class="rounded-3xl border border-slate-200 bg-white p-5">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div class="text-lg font-semibold">Users</div>
+              <div class="text-sm text-slate-600">Admin: set role & nama.</div>
+            </div>
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <input id="uq" class="w-full sm:w-72 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+                placeholder="Cari (nama/email/uuid)..." />
+              <button id="btn-load-users" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          <div class="mt-4 overflow-x-auto rounded-2xl border border-slate-200">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-left text-xs text-slate-500">
+                <tr>
+                  <th class="px-3 py-2">Email</th>
+                  <th class="px-3 py-2">Nama</th>
+                  <th class="px-3 py-2">Role</th>
+                  <th class="px-3 py-2"></th>
+                </tr>
+              </thead>
+              <tbody id="users-tbody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+          <p class="mt-3 text-xs text-slate-500">Catatan: pembuatan user tetap lewat Supabase Auth Dashboard.</p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+    <!-- Modal: Create/Edit assignment -->
+    <div id="m-create" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+      <div class="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <div id="m-title" class="text-lg font-semibold">Buat tugas</div>
+            <div id="m-subtitle" class="text-sm text-slate-600">Isi detail tugas.</div>
+          </div>
+          <button class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50" data-close="m-create">Tutup</button>
+        </div>
+
+        <form id="form-create" class="mt-4 space-y-4">
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label class="text-sm font-semibold">Judul</label>
+              <input id="a-title" class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200" required />
+            </div>
+            <div>
+              <label class="text-sm font-semibold">Mapel</label>
+              <select id="a-subject" class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200" required></select>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-sm font-semibold">Deskripsi</label>
+            <textarea id="a-desc" rows="3" class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200" required></textarea>
+          </div>
+
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label class="text-sm font-semibold">Deadline</label>
+              <input id="a-deadline" type="datetime-local" class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200" required />
+            </div>
+            <div>
+              <label class="text-sm font-semibold">Tipe</label>
+              <select id="a-type" class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200">
+                <option value="file_upload">Upload file</option>
+                <option value="essay">Essay</option>
+                <option value="short_answer">Jawaban singkat</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-2">
+            <button type="button" class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50" data-close="m-create">Batal</button>
+            <button id="btn-save" class="rounded-2xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700" type="submit">Simpan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Detail -->
+    <div id="m-detail" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+      <div class="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <div id="d-title" class="text-lg font-semibold">—</div>
+            <div id="d-meta" class="mt-1 text-sm text-slate-600">—</div>
+          </div>
+          <button class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50" data-close="m-detail">Tutup</button>
+        </div>
+
+        <div class="mt-4">
+          <div class="text-sm font-semibold">Deskripsi</div>
+          <p id="d-desc" class="mt-1 text-sm text-slate-600">—</p>
+        </div>
+
+        <!-- Student submission status -->
+        <div id="d-my" class="mt-5 hidden rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <div class="text-sm font-semibold">Pengumpulan saya</div>
+              <div id="d-my-meta" class="mt-1 text-sm text-slate-600">—</div>
+            </div>
+            <button id="btn-my-file" class="hidden rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50">File</button>
+          </div>
+        </div>
+
+        <!-- Student upload -->
+        <div id="d-upload" class="mt-3 hidden rounded-2xl border border-slate-200 bg-white p-4">
+          <div class="text-sm font-semibold">Upload / replace</div>
+          <p class="mt-1 text-sm text-slate-600">Resubmit bisa sebelum deadline.</p>
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <input id="file" type="file" class="block w-full text-sm" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" />
+            <button id="btn-upload" class="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black">Upload</button>
+            <div id="upload-msg" class="text-sm text-slate-600"></div>
+          </div>
+        </div>
+
+        <!-- Teacher/admin submissions -->
+        <div id="d-submissions" class="mt-5 hidden">
+          <div class="flex items-center justify-between">
+            <div class="text-sm font-semibold">Pengumpulan</div>
+            <button id="btn-load-submissions" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Refresh</button>
+          </div>
+          <div class="mt-3 overflow-x-auto rounded-2xl border border-slate-200">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-left text-xs text-slate-500">
+                <tr>
+                  <th class="px-3 py-2">Siswa</th>
+                  <th class="px-3 py-2">Waktu</th>
+                  <th class="px-3 py-2">Nilai</th>
+                  <th class="px-3 py-2">Feedback</th>
+                  <th class="px-3 py-2"></th>
+                </tr>
+              </thead>
+              <tbody id="submissions-tbody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="mt-6 flex flex-wrap items-center justify-between gap-2">
+          <div id="d-created" class="text-xs text-slate-500">—</div>
+          <div class="flex gap-2">
+            <button id="btn-edit" class="hidden rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">Edit</button>
+            <button id="btn-delete" class="hidden rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100">Hapus</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const escapeHtml = (s) => String(s ?? "").replace(/[&<>"']/g, (m) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+  const dtf = new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short" });
+  const fmt = (ts) => { try { return dtf.format(new Date(ts)); } catch { return "-"; } };
+  const toLocalInputValue = (ts) => {
+    const d = new Date(ts);
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+  };
+  const toBase = (p) => {
+    const b = (window.__ENV__?.BASE_PATH || "").replace(/\/$/, "");
+    return (b ? b : "") + p;
+  };
+
+  const els = {
+    toast: document.getElementById("toast"),
+    meName: document.getElementById("me-name"),
+    meRole: document.getElementById("me-role"),
+    btnLogout: document.getElementById("btn-logout"),
+    btnCreate: document.getElementById("btn-create"),
+    btnRefresh: document.getElementById("btn-refresh"),
+    list: document.getElementById("tasks-list"),
+    q: document.getElementById("q"),
+    qm: document.getElementById("q-m"),
+
+    tabBtns: Array.from(document.querySelectorAll(".tab-btn")),
+    tabSubjects: document.getElementById("tab-subjects"),
+    tabUsers: document.getElementById("tab-users"),
+    panelTasks: document.getElementById("tab-tasks"),
+    panelSubjects: document.getElementById("tab-subjects-panel"),
+    panelUsers: document.getElementById("tab-users-panel"),
+
+    // subjects
+    btnLoadSubjects: document.getElementById("btn-load-subjects"),
+    subjectsList: document.getElementById("subjects-list"),
+    formSubject: document.getElementById("form-subject"),
+    subjectName: document.getElementById("subject-name"),
+
+    // users
+    uq: document.getElementById("uq"),
+    btnLoadUsers: document.getElementById("btn-load-users"),
+    usersTbody: document.getElementById("users-tbody"),
+
+    // modals
+    mCreate: document.getElementById("m-create"),
+    mTitle: document.getElementById("m-title"),
+    mSubtitle: document.getElementById("m-subtitle"),
+    mDetail: document.getElementById("m-detail"),
+
+    formCreate: document.getElementById("form-create"),
+    aTitle: document.getElementById("a-title"),
+    aSubject: document.getElementById("a-subject"),
+    aDesc: document.getElementById("a-desc"),
+    aDeadline: document.getElementById("a-deadline"),
+    aType: document.getElementById("a-type"),
+    btnSave: document.getElementById("btn-save"),
+
+    dTitle: document.getElementById("d-title"),
+    dMeta: document.getElementById("d-meta"),
+    dDesc: document.getElementById("d-desc"),
+    dCreated: document.getElementById("d-created"),
+    dMy: document.getElementById("d-my"),
+    dMyMeta: document.getElementById("d-my-meta"),
+    btnMyFile: document.getElementById("btn-my-file"),
+
+    dUpload: document.getElementById("d-upload"),
+    file: document.getElementById("file"),
+    btnUpload: document.getElementById("btn-upload"),
+    uploadMsg: document.getElementById("upload-msg"),
+
+    dSubmissions: document.getElementById("d-submissions"),
+    btnLoadSubmissions: document.getElementById("btn-load-submissions"),
+    submissionsTbody: document.getElementById("submissions-tbody"),
+
+    btnEdit: document.getElementById("btn-edit"),
+    btnDelete: document.getElementById("btn-delete"),
+  };
+
+  const state = {
+    sb: null,
+    env: null,
+    session: null,
+    profile: null,
+    subjects: [],
+    assignments: [],
+    mySubs: new Map(), // assignment_id -> submission row
+    selected: null,
+    editing: null, // assignment or null
+    users: [],
+  };
+
+  function toast(text, kind="info") {
+    const colors = { ok: "bg-emerald-600", err: "bg-rose-600", warn: "bg-amber-600", info: "bg-slate-900" };
+    const el = document.createElement("div");
+    el.className = `${colors[kind] || colors.info} text-white px-3 py-2 rounded-xl shadow text-sm flex items-start justify-between gap-3`;
+    el.innerHTML = `<div>${escapeHtml(text)}</div><button class="opacity-80 hover:opacity-100" aria-label="close">✕</button>`;
+    el.querySelector("button").addEventListener("click", () => el.remove());
+    els.toast.appendChild(el);
+    setTimeout(() => el.remove(), 4200);
+  }
+
+  function openModal(el) { el.classList.remove("hidden"); el.classList.add("flex"); }
+  function closeModal(el) { el.classList.add("hidden"); el.classList.remove("flex"); }
+
+  function setTab(tab) {
+    els.tabBtns.forEach(b => {
+      const active = b.dataset.tab === tab;
+      b.classList.toggle("bg-slate-900", active);
+      b.classList.toggle("text-white", active);
+      b.classList.toggle("text-slate-700", !active);
+    });
+    els.panelTasks.classList.toggle("hidden", tab !== "tasks");
+    els.panelSubjects.classList.toggle("hidden", tab !== "subjects");
+    els.panelUsers.classList.toggle("hidden", tab !== "users");
+  }
+
+  function deadlineStatus(deadline) {
+    const t = new Date(deadline).getTime();
+    return t < Date.now() ? "Terlambat" : "Aktif";
+  }
+
+  async function requireSession() {
+    const env = await __loadEnv();
+    state.env = env;
+    const okConfig = env && env.SUPABASE_URL && env.SUPABASE_ANON_KEY && !String(env.SUPABASE_URL).includes("YOUR_");
+    if (!okConfig) {
+      toast("env.js belum kebaca. Cek BASE_PATH / URL / anon key.", "err");
+      window.location.href = toBase("/log/");
+      return;
+    }
+    state.sb = supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+
+    const { data: { session } } = await state.sb.auth.getSession();
+    if (!session) {
+      window.location.href = toBase("/log/");
+      return;
+    }
+    state.session = session;
+  }
+
+  async function loadProfile() {
+    const uid = state.session.user.id;
+    const { data, error } = await state.sb.from("profiles").select("id, full_name, role, email").eq("id", uid).single();
+    if (error) {
+      state.profile = { id: uid, full_name: state.session.user.email, role: "student", email: state.session.user.email };
+      return;
+    }
+    state.profile = data;
+  }
+
+  async function loadSubjects() {
+    const { data, error } = await state.sb.from("subjects").select("id, name").order("name", { ascending: true });
+    if (error) { toast(error.message, "err"); return; }
+    state.subjects = data || [];
+    els.aSubject.innerHTML = state.subjects.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("");
+  }
+
+  async function loadAssignments() {
+    els.list.innerHTML = `<div class="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-500">Memuat…</div>`;
+    const { data, error } = await state.sb
+      .from("assignments")
+      .select("id,title,description,deadline,type,created_by,created_at,subject_text, subject:subjects(name)")
+      .order("created_at", { ascending: false })
+      .limit(120);
+
+    if (error) {
+      els.list.innerHTML = `<div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">${escapeHtml(error.message)}</div>`;
+      return;
+    }
+    state.assignments = data || [];
+
+    // If student, also load my submissions for status chips
+    if ((state.profile?.role || "student") === "student") {
+      await loadMySubmissions();
+    }
+    renderAssignments();
+  }
+
+  async function loadMySubmissions() {
+    const uid = state.session.user.id;
+    const ids = state.assignments.map(a => a.id);
+    state.mySubs = new Map();
+    if (ids.length === 0) return;
+
+    const { data, error } = await state.sb
+      .from("submissions")
+      .select("assignment_id, submitted_at, grade, feedback, file_path")
+      .eq("student_id", uid)
+      .in("assignment_id", ids);
+
+    if (error) return; // don't block UI
+    (data || []).forEach(s => state.mySubs.set(s.assignment_id, s));
+  }
+
+  function renderAssignments() {
+    const q = (els.q?.value || els.qm?.value || "").trim().toLowerCase();
+    const role = state.profile?.role || "student";
+
+    const items = state.assignments.filter(a => {
+      if (!q) return true;
+      const subject = (a.subject?.name || a.subject_text || "").toLowerCase();
+      return (
+        (a.title || "").toLowerCase().includes(q) ||
+        (a.description || "").toLowerCase().includes(q) ||
+        subject.includes(q)
+      );
+    });
+
+    if (items.length === 0) {
+      els.list.innerHTML = `<div class="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-500">Tidak ada tugas.</div>`;
+      return;
+    }
+
+    els.list.innerHTML = items.map(a => {
+      const subject = a.subject?.name || a.subject_text || "-";
+      const status = deadlineStatus(a.deadline);
+      const statusCls = status === "Aktif" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700";
+
+      // student submission chip
+      const sub = state.mySubs.get(a.id);
+      const hasSub = !!sub;
+      const subChip = role === "student"
+        ? (hasSub
+          ? `<span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">Terkumpul</span>`
+          : `<span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600">Belum</span>`)
+        : "";
+
+      const gradeChip = role === "student" && hasSub && sub.grade != null
+        ? `<span class="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">Nilai: ${escapeHtml(sub.grade)}</span>`
+        : "";
+
+      return `
+        <article class="rounded-3xl border border-slate-200 bg-white p-5">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <div class="text-sm text-slate-500">${escapeHtml(subject)}</div>
+              <div class="mt-0.5 text-base font-semibold">${escapeHtml(a.title)}</div>
+              <p class="mt-1 text-sm text-slate-600 line-clamp-2">${escapeHtml(a.description || "")}</p>
+            </div>
+            <div class="flex flex-col items-end gap-2">
+              <div class="flex flex-wrap items-center justify-end gap-2">
+                <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${statusCls}">${status}</span>
+                ${subChip}
+                ${gradeChip}
+              </div>
+              <button class="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50" data-action="detail" data-id="${a.id}">
+                Detail
+              </button>
+            </div>
+          </div>
+
+          <div class="mt-4 flex flex-wrap gap-3 text-xs text-slate-500">
+            <span>Deadline: <b class="text-slate-700">${fmt(a.deadline)}</b></span>
+            <span>Tipe: <b class="text-slate-700">${escapeHtml(a.type)}</b></span>
+          </div>
+        </article>
+      `;
+    }).join("");
+  }
+
+  async function upsertAssignment(payload, id=null) {
+    if (!id) {
+      const { error } = await state.sb.from("assignments").insert([payload]);
+      if (error) throw error;
+      return;
+    }
+    const { error } = await state.sb.from("assignments").update(payload).eq("id", id);
+    if (error) throw error;
+  }
+
+  async function deleteAssignment(id) {
+    const { error } = await state.sb.from("assignments").delete().eq("id", id);
+    if (error) throw error;
+  }
+
+  async function openDetail(id) {
+    const { data, error } = await state.sb
+      .from("assignments")
+      .select("id,title,description,deadline,type,created_by,created_at,subject_id,subject_text, subject:subjects(name)")
+      .eq("id", id).single();
+    if (error) throw error;
+
+    state.selected = data;
+
+    const subject = data.subject?.name || data.subject_text || "-";
+    els.dTitle.textContent = data.title || "-";
+    els.dMeta.textContent = `${subject} • Deadline: ${fmt(data.deadline)} • Tipe: ${data.type}`;
+    els.dDesc.textContent = data.description || "-";
+    els.dCreated.textContent = `Dibuat: ${fmt(data.created_at)}`;
+
+    const role = state.profile?.role || "student";
+    const uid = state.session.user.id;
+    const isOwner = data.created_by === uid;
+
+    // Student block
+    const isStudent = role === "student";
+    els.dMy.classList.toggle("hidden", !isStudent);
+    els.dUpload.classList.toggle("hidden", !(isStudent && data.type === "file_upload"));
+
+    if (isStudent) {
+      // read my submission (from map or fetch just in case)
+      let sub = state.mySubs.get(data.id);
+      if (!sub) {
+        const { data: sData } = await state.sb.from("submissions").select("submitted_at,grade,feedback,file_path").eq("assignment_id", data.id).eq("student_id", uid).maybeSingle();
+        sub = sData || null;
+      }
+      if (sub) {
+        els.dMyMeta.textContent = `Terkumpul: ${fmt(sub.submitted_at)} • Nilai: ${sub.grade ?? "-"}`;
+        els.btnMyFile.classList.remove("hidden");
+        els.btnMyFile.dataset.path = sub.file_path;
+      } else {
+        els.dMyMeta.textContent = "Belum ada pengumpulan.";
+        els.btnMyFile.classList.add("hidden");
+        els.btnMyFile.dataset.path = "";
+      }
+    }
+
+    // Teacher/admin submissions
+    const canSeeSubs = (role === "admin" || role === "teacher");
+    els.dSubmissions.classList.toggle("hidden", !canSeeSubs);
+
+    const canEdit = (role === "admin" || (role === "teacher" && isOwner));
+    els.btnEdit.classList.toggle("hidden", !canEdit);
+    els.btnDelete.classList.toggle("hidden", !canEdit);
+
+    if (canSeeSubs) await loadSubmissions();
+
+    openModal(els.mDetail);
+  }
+
+  async function loadSubmissions() {
+    const a = state.selected;
+    if (!a) return;
+    els.submissionsTbody.innerHTML = `<tr><td class="px-3 py-3 text-slate-500" colspan="5">Memuat…</td></tr>`;
+
+    const { data, error } = await state.sb
+      .from("submissions")
+      .select("id, student_id, submitted_at, grade, feedback, file_path")
+      .eq("assignment_id", a.id)
+      .order("submitted_at", { ascending: false })
+      .limit(300);
+
+    if (error) {
+      els.submissionsTbody.innerHTML = `<tr><td class="px-3 py-3 text-rose-800" colspan="5">${escapeHtml(error.message)}</td></tr>`;
+      return;
+    }
+
+    const rows = (data || []).map(s => {
+      const grade = (s.grade ?? "");
+      const feedback = (s.feedback ?? "");
+      const sid = String(s.student_id || "");
+      const shortId = sid ? (sid.slice(0, 8) + "…" + sid.slice(-4)) : "-";
+
+      return `
+        <tr>
+          <td class="px-3 py-3 font-mono text-xs text-slate-700" title="${escapeHtml(s.student_id)}">${escapeHtml(shortId)}</td>
+          <td class="px-3 py-3 text-slate-600">${fmt(s.submitted_at)}</td>
+          <td class="px-3 py-3">
+            <input data-grade="${s.id}" class="w-20 rounded-xl border border-slate-200 bg-white px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-indigo-200" value="${escapeHtml(grade)}" placeholder="0-100" />
+          </td>
+          <td class="px-3 py-3">
+            <input data-feedback="${s.id}" class="w-56 rounded-xl border border-slate-200 bg-white px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-indigo-200" value="${escapeHtml(feedback)}" placeholder="catatan..." />
+          </td>
+          <td class="px-3 py-3 text-right whitespace-nowrap">
+            <button data-dl="${escapeHtml(s.file_path)}" class="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">File</button>
+            <button data-save-sub="${s.id}" class="ml-1 rounded-xl bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-black">Simpan</button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    els.submissionsTbody.innerHTML = rows || `<tr><td class="px-3 py-3 text-slate-500" colspan="5">Belum ada pengumpulan.</td></tr>`;
+  }
+
+  async function downloadFile(path) {
+    try {
+      const bucket = state.env.STORAGE_BUCKET || "submissions";
+      const { data, error } = await state.sb.storage.from(bucket).createSignedUrl(path, 90);
+      if (error) throw error;
+      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      toast(err.message || "Gagal buat link file", "err");
+    }
+  }
+
+  async function saveSubmission(submissionId) {
+    const gradeEl = document.querySelector(`[data-grade="${submissionId}"]`);
+    const fbEl = document.querySelector(`[data-feedback="${submissionId}"]`);
+    const raw = (gradeEl?.value || "").trim();
+    const grade = raw === "" ? null : Number(raw);
+    const feedback = (fbEl?.value || "").trim() || null;
+
+    if (raw !== "" && (Number.isNaN(grade) || grade < 0 || grade > 100)) {
+      return toast("Nilai harus 0-100.", "warn");
+    }
+
+    try {
+      const { error } = await state.sb.from("submissions").update({ grade, feedback }).eq("id", submissionId);
+      if (error) throw error;
+      toast("Pengumpulan tersimpan.", "ok");
+      // refresh my map for student view if needed
+    } catch (err) {
+      toast(err.message || "Gagal simpan", "err");
+    }
+  }
+
+  async function uploadStudent() {
+    const a = state.selected;
+    if (!a) return;
+    const file = els.file.files?.[0];
+    if (!file) return toast("Pilih file dulu.", "warn");
+
+    els.uploadMsg.textContent = "Mengupload…";
+    try {
+      const uid = state.session.user.id;
+      const ext = (file.name.split(".").pop() || "bin").toLowerCase();
+      const path = `${a.id}/${uid}/${Date.now()}.${ext}`;
+      const bucket = state.env.STORAGE_BUCKET || "submissions";
+
+      const { error: upErr } = await state.sb.storage.from(bucket).upload(path, file, { upsert: false, contentType: file.type || "application/octet-stream" });
+      if (upErr) throw upErr;
+
+      // Use RPC for resubmit support (requires SQL patch)
+      const { error: rpcErr } = await state.sb.rpc("student_submit_file", { p_assignment_id: a.id, p_file_path: path });
+      if (rpcErr) throw rpcErr;
+
+      toast("Berhasil dikumpulkan.", "ok");
+      els.uploadMsg.textContent = "Berhasil.";
+      els.file.value = "";
+
+      // refresh student submission state
+      await loadMySubmissions();
+      // refresh detail status
+      els.dMyMeta.textContent = `Terkumpul: barusan • Nilai: -`;
+      els.btnMyFile.classList.remove("hidden");
+      els.btnMyFile.dataset.path = path;
+      renderAssignments();
+    } catch (err) {
+      toast(err.message || "Gagal upload", "err");
+      els.uploadMsg.textContent = err.message || "Gagal.";
+    }
+  }
+
+  async function renderSubjects() {
+    els.subjectsList.innerHTML = `<div class="py-3 text-sm text-slate-500">Memuat…</div>`;
+    const { data, error } = await state.sb.from("subjects").select("id,name").order("name", { ascending: true });
+    if (error) {
+      els.subjectsList.innerHTML = `<div class="py-3 text-sm text-rose-800">${escapeHtml(error.message)}</div>`;
+      return;
+    }
+    state.subjects = data || [];
+    els.subjectsList.innerHTML = state.subjects.map(s => `
+      <div class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex-1">
+          <input data-subject-name="${s.id}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+            value="${escapeHtml(s.name)}" />
+        </div>
+        <div class="flex gap-2">
+          <button data-save-subject="${s.id}" class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">Simpan</button>
+          <button data-del-subject="${s.id}" class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100">Hapus</button>
+        </div>
+      </div>
+    `).join("") || `<div class="py-3 text-sm text-slate-500">Belum ada mapel.</div>`;
+
+    els.aSubject.innerHTML = state.subjects.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("");
+  }
+
+  async function addSubject(name) {
+    const clean = name.trim();
+    if (!clean) return;
+    const { error } = await state.sb.from("subjects").insert([{ name: clean }]);
+    if (error) throw error;
+  }
+
+  async function saveSubject(id) {
+    const input = document.querySelector(`[data-subject-name="${id}"]`);
+    const name = input?.value?.trim();
+    if (!name) return toast("Nama mapel kosong.", "warn");
+    const { error } = await state.sb.from("subjects").update({ name }).eq("id", id);
+    if (error) throw error;
+    toast("Mapel disimpan.", "ok");
+    await loadSubjects();
+  }
+
+  async function deleteSubject(id) {
+    const { error } = await state.sb.from("subjects").delete().eq("id", id);
+    if (error) throw error;
+  }
+
+  async function loadUsers() {
+    els.usersTbody.innerHTML = `<tr><td class="px-3 py-3 text-slate-500" colspan="4">Memuat…</td></tr>`;
+    // email column exists if you applied SQL patch; try with email first, fallback if not
+    let data = null;
+    let error = null;
+    const r1 = await state.sb.from("profiles").select("id, full_name, role, email, created_at").order("created_at", { ascending: false }).limit(500);
+    data = r1.data; error = r1.error;
+    if (error && String(error.message || "").includes("column") && String(error.message || "").includes("email")) {
+      const r2 = await state.sb.from("profiles").select("id, full_name, role, created_at").order("created_at", { ascending: false }).limit(500);
+      data = r2.data; error = r2.error;
+    }
+    if (error) {
+      els.usersTbody.innerHTML = `<tr><td class="px-3 py-3 text-rose-800" colspan="4">${escapeHtml(error.message)}</td></tr>`;
+      return;
+    }
+    state.users = data || [];
+    renderUsers();
+  }
+
+  function renderUsers() {
+    const q = (els.uq.value || "").trim().toLowerCase();
+    const rows = state.users.filter(u => {
+      if (!q) return true;
+      return (
+        String(u.email || "").toLowerCase().includes(q) ||
+        String(u.full_name || "").toLowerCase().includes(q) ||
+        String(u.id || "").toLowerCase().includes(q)
+      );
+    }).map(u => {
+      const email = u.email || "-";
+      const name = u.full_name || "";
+      const role = u.role || "student";
+      return `
+        <tr>
+          <td class="px-3 py-3">${escapeHtml(email)}</td>
+          <td class="px-3 py-3">
+            <input data-u-name="${u.id}" class="w-64 max-w-full rounded-xl border border-slate-200 bg-white px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+              value="${escapeHtml(name)}" placeholder="Nama" />
+          </td>
+          <td class="px-3 py-3">
+            <select data-u-role="${u.id}" class="rounded-xl border border-slate-200 bg-white px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-indigo-200">
+              <option value="student" ${role==="student" ? "selected" : ""}>student</option>
+              <option value="teacher" ${role==="teacher" ? "selected" : ""}>teacher</option>
+              <option value="admin" ${role==="admin" ? "selected" : ""}>admin</option>
+            </select>
+          </td>
+          <td class="px-3 py-3 text-right whitespace-nowrap">
+            <button data-u-save="${u.id}" class="rounded-xl bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-black">Simpan</button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    els.usersTbody.innerHTML = rows || `<tr><td class="px-3 py-3 text-slate-500" colspan="4">Tidak ada user.</td></tr>`;
+  }
+
+  async function adminSaveUser(uid) {
+    const roleEl = document.querySelector(`[data-u-role="${uid}"]`);
+    const nameEl = document.querySelector(`[data-u-name="${uid}"]`);
+    const newRole = roleEl?.value;
+    const newName = (nameEl?.value || "").trim();
+
+    try {
+      // Requires SQL patch (RPC). Safer than allowing direct update policy.
+      const r1 = await state.sb.rpc("admin_set_role", { target_user_id: uid, new_role: newRole });
+      if (r1.error) throw r1.error;
+
+      const r2 = await state.sb.rpc("admin_set_name", { target_user_id: uid, new_full_name: newName });
+      if (r2.error) throw r2.error;
+
+      toast("User disimpan.", "ok");
+      await loadUsers();
+    } catch (err) {
+      toast(err.message || "Gagal simpan user (cek SQL patch)", "err");
+    }
+  }
+
+  // Events
+  document.addEventListener("click", (e) => {
+    const close = e.target.closest("[data-close]");
+    if (close) {
+      closeModal(document.getElementById(close.dataset.close));
+      return;
+    }
+
+    const act = e.target.closest("[data-action]");
+    if (act?.dataset.action === "detail") {
+      openDetail(act.dataset.id).catch(err => toast(err.message, "err"));
+      return;
+    }
+
+    const dl = e.target.closest("[data-dl]");
+    if (dl) return downloadFile(dl.dataset.dl);
+
+    const saveSub = e.target.closest("[data-save-sub]");
+    if (saveSub) return saveSubmission(saveSub.dataset.saveSub);
+
+    const saveSubjectBtn = e.target.closest("[data-save-subject]");
+    if (saveSubjectBtn) {
+      saveSubject(saveSubjectBtn.dataset.saveSubject).catch(err => toast(err.message, "err"));
+      return;
+    }
+
+    const delSubj = e.target.closest("[data-del-subject]");
+    if (delSubj) {
+      if (confirm("Hapus mapel ini?")) {
+        deleteSubject(delSubj.dataset.delSubject).then(() => renderSubjects()).catch(err => toast(err.message, "err"));
+      }
+      return;
+    }
+
+    const uSave = e.target.closest("[data-u-save]");
+    if (uSave) {
+      adminSaveUser(uSave.dataset.uSave);
+      return;
+    }
+  });
+
+  els.btnLogout.addEventListener("click", async () => {
+    await state.sb.auth.signOut();
+    window.location.href = toBase("/log/");
+  });
+
+  els.btnCreate.addEventListener("click", () => {
+    state.editing = null;
+    els.mTitle.textContent = "Buat tugas";
+    els.mSubtitle.textContent = "Isi detail tugas.";
+    els.formCreate.reset();
+    openModal(els.mCreate);
+  });
+
+  els.btnRefresh.addEventListener("click", () => loadAssignments());
+
+  els.q?.addEventListener("input", renderAssignments);
+  els.qm?.addEventListener("input", () => {
+    if (els.q) els.q.value = els.qm.value;
+    renderAssignments();
+  });
+
+  els.formCreate.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        title: els.aTitle.value.trim(),
+        description: els.aDesc.value.trim(),
+        subject_id: els.aSubject.value,
+        deadline: new Date(els.aDeadline.value).toISOString(),
+        type: els.aType.value,
+      };
+
+      if (!state.editing) {
+        payload.created_by = state.session.user.id;
+      }
+
+      els.btnSave.disabled = true;
+      els.btnSave.textContent = "Menyimpan…";
+
+      await upsertAssignment(payload, state.editing?.id || null);
+      closeModal(els.mCreate);
+      state.editing = null;
+      await loadAssignments();
+      toast("Tugas tersimpan.", "ok");
+    } catch (err) {
+      toast(err.message || "Gagal menyimpan tugas", "err");
+    } finally {
+      els.btnSave.disabled = false;
+      els.btnSave.textContent = "Simpan";
+    }
+  });
+
+  els.btnUpload.addEventListener("click", uploadStudent);
+  els.btnLoadSubmissions.addEventListener("click", () => loadSubmissions().catch(err => toast(err.message, "err")));
+
+  els.btnMyFile.addEventListener("click", () => {
+    const p = els.btnMyFile.dataset.path;
+    if (p) downloadFile(p);
+  });
+
+  els.btnEdit.addEventListener("click", async () => {
+    const a = state.selected;
+    if (!a) return;
+    state.editing = a;
+    els.mTitle.textContent = "Edit tugas";
+    els.mSubtitle.textContent = "Perbarui judul, deadline, dll.";
+    // ensure subjects loaded
+    await loadSubjects();
+
+    els.aTitle.value = a.title || "";
+    els.aDesc.value = a.description || "";
+    els.aType.value = a.type || "file_upload";
+    els.aDeadline.value = toLocalInputValue(a.deadline);
+    // subject id
+    if (a.subject_id) {
+      els.aSubject.value = a.subject_id;
+    }
+    closeModal(els.mDetail);
+    openModal(els.mCreate);
+  });
+
+  els.btnDelete.addEventListener("click", async () => {
+    const a = state.selected;
+    if (!a) return;
+    if (!confirm("Hapus tugas ini?")) return;
+    try {
+      await deleteAssignment(a.id);
+      closeModal(els.mDetail);
+      await loadAssignments();
+      toast("Tugas dihapus.", "ok");
+    } catch (err) {
+      toast(err.message || "Gagal hapus", "err");
+    }
+  });
+
+  els.btnLoadSubjects.addEventListener("click", () => renderSubjects().catch(err => toast(err.message, "err")));
+
+  els.formSubject.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      const name = els.subjectName.value;
+      await addSubject(name);
+      els.subjectName.value = "";
+      await renderSubjects();
+      toast("Mapel ditambahkan.", "ok");
+    } catch (err) {
+      toast(err.message || "Gagal tambah mapel", "err");
+    }
+  });
+
+  els.btnLoadUsers.addEventListener("click", () => loadUsers().catch(err => toast(err.message, "err")));
+  els.uq.addEventListener("input", renderUsers);
+
+  els.tabBtns.forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+
+  // Init
+  (async () => {
+    await requireSession();
+    await loadProfile();
+
+    els.meName.textContent = state.profile.full_name || state.session.user.email || "User";
+    els.meRole.textContent = String(state.profile.role || "student").toUpperCase();
+
+    const role = state.profile.role || "student";
+    const canCreate = (role === "teacher" || role === "admin");
+    els.btnCreate.classList.toggle("hidden", !canCreate);
+
+    const isAdmin = role === "admin";
+    els.tabSubjects.classList.toggle("hidden", !isAdmin);
+    els.tabUsers.classList.toggle("hidden", !isAdmin);
+
+    // Default tab
+    setTab("tasks");
+
+    await loadSubjects();
+    await loadAssignments();
+
+    if (isAdmin) {
+      await renderSubjects();
+      await loadUsers();
+    }
+
+    state.sb.auth.onAuthStateChange((_event, session) => {
+      if (!session) window.location.href = toBase("/log/");
+    });
+  })();
+</script>
+</body>
+</html>

@@ -118,7 +118,9 @@
     const env = window.__ENV__ || {};
     const okConfig = env.SUPABASE_URL && env.SUPABASE_ANON_KEY && !String(env.SUPABASE_URL).includes("YOUR_");
     const warn = document.getElementById("config-warning");
-    if (!okConfig) warn.classList.remove("hidden");
+    if (!okConfig) {
+      console.warn("ENV not loaded. Check env.js path.");
+    }
 
     const msg = (text, kind="info") => {
       const box = document.getElementById("msg");

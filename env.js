@@ -4,7 +4,7 @@
 
 window.__ENV__ = {
   APP_NAME: "Tugasmu",
-  SUPABASE_URL: "YOUR_SUPABASE_URL",
-  SUPABASE_ANON_KEY: "YOUR_SUPABASE_ANON_KEY",
+  SUPABASE_URL: "https://stvasgalfivxlwullqgs.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0dmFzZ2FsZml2eGx3dWxscWdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMzg3NDMsImV4cCI6MjA4NTgxNDc0M30.B13VAQ50PEUAHmPzHavMZr5nOhosI6CpLsr_4nrnBDw",
   STORAGE_BUCKET: "submissions",
 };

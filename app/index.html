@@ -7,7 +7,7 @@
   <title>Aplikasi • Tugasmu</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
+
 <style>
   :root{
     --bg: #f8fafc; /* slate-50 */
@@ -30,19 +30,15 @@
   }
 </style>
 
-  
 <script>
   // Robust env loader: works on /log, /app, root, and most GitHub Pages layouts.
   async function __loadEnv() {
     if (window.__ENV__) return window.__ENV__;
 
     const guessRepoBase = () => {
-      // If deployed at https://user.github.io/repo/..., this guesses "/repo"
-      // If deployed at root (user/organization site), BASE_PATH should remain "".
       const parts = location.pathname.split("/").filter(Boolean);
       if (!location.hostname.endsWith("github.io")) return "";
-      if (parts.length >= 2 && (parts[0] === "app" || parts[0] === "log")) return ""; // our folders, not repo
-      // If URL looks like /repo/app/..., base is /repo
+      if (parts.length >= 2 && (parts[0] === "app" || parts[0] === "log")) return "";
       if (parts.length >= 2 && (parts[1] === "app" || parts[1] === "log")) return "/" + parts[0];
       return "";
     };
@@ -136,26 +132,46 @@
         <div id="tasks-list" class="mt-4 space-y-3"></div>
       </section>
 
-      <!-- Subjects -->
+      <!-- Subjects (TABLE, inline editable) -->
       <section id="tab-subjects-panel" class="mt-5 hidden">
         <div class="rounded-3xl border border-slate-200 bg-white p-5">
           <div class="flex items-center justify-between gap-2">
             <div>
               <div class="text-lg font-semibold">Mapel</div>
-              <div class="text-sm text-slate-600">Tambah, edit, hapus mapel.</div>
+              <div class="text-sm text-slate-600">Tambah, edit per baris, hapus mapel.</div>
             </div>
-            <button id="btn-load-subjects" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+            <button id="mapelRefreshBtn" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
               Refresh
             </button>
           </div>
 
-          <form id="form-subject" class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
-            <input id="subject-name" class="w-full flex-1 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-              placeholder="Tambah mapel (mis. PJOK)" />
-            <button class="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black" type="submit">Tambah</button>
-          </form>
+          <div class="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
+              <div class="flex-1">
+                <label class="text-sm font-semibold text-slate-700">Nama mapel</label>
+                <input id="mapelNewName" class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+                  placeholder="Tambah mapel (mis. PJOK)" />
+              </div>
+              <button id="mapelAddBtn" class="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black">
+                Tambah
+              </button>
+            </div>
+          </div>
 
-          <div id="subjects-list" class="mt-4 divide-y divide-slate-100"></div>
+          <div class="mt-4 overflow-x-auto rounded-2xl border border-slate-200">
+            <table class="min-w-[680px] w-full text-sm">
+              <thead class="bg-slate-50 text-left text-xs text-slate-500">
+                <tr>
+                  <th class="px-3 py-2">Nama</th>
+                  <th class="px-3 py-2">Dibuat</th>
+                  <th class="px-3 py-2 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="mapelTbody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+
+          <div id="mapelEmpty" class="hidden py-5 text-center text-sm text-slate-500">Belum ada mapel.</div>
         </div>
       </section>
 
@@ -351,11 +367,12 @@
     panelSubjects: document.getElementById("tab-subjects-panel"),
     panelUsers: document.getElementById("tab-users-panel"),
 
-    // subjects
-    btnLoadSubjects: document.getElementById("btn-load-subjects"),
-    subjectsList: document.getElementById("subjects-list"),
-    formSubject: document.getElementById("form-subject"),
-    subjectName: document.getElementById("subject-name"),
+    // subjects table
+    mapelRefreshBtn: document.getElementById("mapelRefreshBtn"),
+    mapelNewName: document.getElementById("mapelNewName"),
+    mapelAddBtn: document.getElementById("mapelAddBtn"),
+    mapelTbody: document.getElementById("mapelTbody"),
+    mapelEmpty: document.getElementById("mapelEmpty"),
 
     // users
     uq: document.getElementById("uq"),
@@ -469,12 +486,114 @@
     state.profile = data;
   }
 
-  async function loadSubjects() {
-    const { data, error } = await state.sb.from("subjects").select("id, name").order("name", { ascending: true });
+  // ===== Subjects (shared loader for select + table)
+  async function loadSubjectsAll() {
+    // include created_at for table
+    const { data, error } = await state.sb.from("subjects").select("id, name, created_at").order("name", { ascending: true });
     if (error) { toast(error.message, "err"); return; }
     state.subjects = data || [];
+    // fill select in modal
     els.aSubject.innerHTML = state.subjects.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("");
+    // render table if admin tab visible
+    renderSubjectsTable();
   }
+
+  function renderSubjectsTable() {
+    if (!els.mapelTbody || !els.mapelEmpty) return;
+    const rows = state.subjects || [];
+
+    if (!rows.length) {
+      els.mapelTbody.innerHTML = "";
+      els.mapelEmpty.classList.remove("hidden");
+      return;
+    }
+    els.mapelEmpty.classList.add("hidden");
+
+    els.mapelTbody.innerHTML = rows.map(s => {
+      return `
+        <tr data-id="${s.id}">
+          <td class="px-3 py-3">
+            <input data-field="name" class="w-full max-w-[420px] rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+              value="${escapeHtml(s.name)}" />
+            <div class="mt-1 hidden text-xs text-rose-600" data-err></div>
+          </td>
+          <td class="px-3 py-3 text-slate-500">${escapeHtml(fmt(s.created_at))}</td>
+          <td class="px-3 py-3 text-right whitespace-nowrap">
+            <button data-action="save" class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">Simpan</button>
+            <button data-action="delete" class="ml-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100">Hapus</button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  async function addSubjectTable() {
+    const name = (els.mapelNewName?.value || "").trim();
+    if (!name) return toast("Nama mapel tidak boleh kosong.", "warn");
+
+    els.mapelAddBtn.disabled = true;
+    const old = els.mapelAddBtn.textContent;
+    els.mapelAddBtn.textContent = "Menambah…";
+
+    try {
+      const { error } = await state.sb.from("subjects").insert([{ name }]);
+      if (error) throw error;
+      els.mapelNewName.value = "";
+      toast("Mapel ditambahkan.", "ok");
+      await loadSubjectsAll();
+    } catch (err) {
+      toast(err.message || "Gagal tambah mapel", "err");
+    } finally {
+      els.mapelAddBtn.disabled = false;
+      els.mapelAddBtn.textContent = old;
+    }
+  }
+
+  async function saveSubjectRow(id, tr) {
+    const input = tr.querySelector('input[data-field="name"]');
+    const errEl = tr.querySelector("[data-err]");
+    if (errEl) { errEl.textContent = ""; errEl.classList.add("hidden"); }
+    tr.classList.remove("bg-rose-50");
+
+    const name = (input?.value || "").trim();
+    if (!name) {
+      if (errEl) { errEl.textContent = "Nama mapel tidak boleh kosong."; errEl.classList.remove("hidden"); }
+      tr.classList.add("bg-rose-50");
+      return;
+    }
+
+    const btn = tr.querySelector('button[data-action="save"]');
+    btn.disabled = true;
+    const old = btn.textContent;
+    btn.textContent = "Menyimpan…";
+
+    try {
+      const { error } = await state.sb.from("subjects").update({ name }).eq("id", id);
+      if (error) throw error;
+      toast("Mapel disimpan.", "ok");
+      // update local cache without full reload
+      const i = state.subjects.findIndex(x => x.id === id);
+      if (i >= 0) state.subjects[i].name = name;
+      btn.textContent = "Tersimpan";
+      setTimeout(() => { btn.textContent = old; btn.disabled = false; }, 550);
+      // also refresh select options
+      els.aSubject.innerHTML = state.subjects.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("");
+    } catch (err) {
+      if (errEl) { errEl.textContent = err.message || "Gagal simpan."; errEl.classList.remove("hidden"); }
+      tr.classList.add("bg-rose-50");
+      btn.disabled = false;
+      btn.textContent = old;
+    }
+  }
+
+  async function deleteSubjectRow(id) {
+    if (!confirm("Hapus mapel ini?")) return;
+    const { error } = await state.sb.from("subjects").delete().eq("id", id);
+    if (error) return toast(error.message, "err");
+    toast("Mapel dihapus.", "ok");
+    await loadSubjectsAll();
+  }
+  // ===== end subjects
 
   async function loadAssignments() {
     els.list.innerHTML = `<div class="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-500">Memuat…</div>`;
@@ -490,7 +609,6 @@
     }
     state.assignments = data || [];
 
-    // If student, also load my submissions for status chips
     if ((state.profile?.role || "student") === "student") {
       await loadMySubmissions();
     }
@@ -509,7 +627,7 @@
       .eq("student_id", uid)
       .in("assignment_id", ids);
 
-    if (error) return; // don't block UI
+    if (error) return;
     (data || []).forEach(s => state.mySubs.set(s.assignment_id, s));
   }
 
@@ -537,7 +655,6 @@
       const status = deadlineStatus(a.deadline);
       const statusCls = status === "Aktif" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700";
 
-      // student submission chip
       const sub = state.mySubs.get(a.id);
       const hasSub = !!sub;
       const subChip = role === "student"
@@ -613,13 +730,11 @@
     const uid = state.session.user.id;
     const isOwner = data.created_by === uid;
 
-    // Student block
     const isStudent = role === "student";
     els.dMy.classList.toggle("hidden", !isStudent);
     els.dUpload.classList.toggle("hidden", !(isStudent && data.type === "file_upload"));
 
     if (isStudent) {
-      // read my submission (from map or fetch just in case)
       let sub = state.mySubs.get(data.id);
       if (!sub) {
         const { data: sData } = await state.sb.from("submissions").select("submitted_at,grade,feedback,file_path").eq("assignment_id", data.id).eq("student_id", uid).maybeSingle();
@@ -636,7 +751,6 @@
       }
     }
 
-    // Teacher/admin submissions
     const canSeeSubs = (role === "admin" || role === "teacher");
     els.dSubmissions.classList.toggle("hidden", !canSeeSubs);
 
@@ -719,7 +833,6 @@
       const { error } = await state.sb.from("submissions").update({ grade, feedback }).eq("id", submissionId);
       if (error) throw error;
       toast("Pengumpulan tersimpan.", "ok");
-      // refresh my map for student view if needed
     } catch (err) {
       toast(err.message || "Gagal simpan", "err");
     }
@@ -741,7 +854,6 @@
       const { error: upErr } = await state.sb.storage.from(bucket).upload(path, file, { upsert: false, contentType: file.type || "application/octet-stream" });
       if (upErr) throw upErr;
 
-      // Use RPC for resubmit support (requires SQL patch)
       const { error: rpcErr } = await state.sb.rpc("student_submit_file", { p_assignment_id: a.id, p_file_path: path });
       if (rpcErr) throw rpcErr;
 
@@ -749,9 +861,7 @@
       els.uploadMsg.textContent = "Berhasil.";
       els.file.value = "";
 
-      // refresh student submission state
       await loadMySubmissions();
-      // refresh detail status
       els.dMyMeta.textContent = `Terkumpul: barusan • Nilai: -`;
       els.btnMyFile.classList.remove("hidden");
       els.btnMyFile.dataset.path = path;
@@ -762,55 +872,8 @@
     }
   }
 
-  async function renderSubjects() {
-    els.subjectsList.innerHTML = `<div class="py-3 text-sm text-slate-500">Memuat…</div>`;
-    const { data, error } = await state.sb.from("subjects").select("id,name").order("name", { ascending: true });
-    if (error) {
-      els.subjectsList.innerHTML = `<div class="py-3 text-sm text-rose-800">${escapeHtml(error.message)}</div>`;
-      return;
-    }
-    state.subjects = data || [];
-    els.subjectsList.innerHTML = state.subjects.map(s => `
-      <div class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex-1">
-          <input data-subject-name="${s.id}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-            value="${escapeHtml(s.name)}" />
-        </div>
-        <div class="flex gap-2">
-          <button data-save-subject="${s.id}" class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black">Simpan</button>
-          <button data-del-subject="${s.id}" class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100">Hapus</button>
-        </div>
-      </div>
-    `).join("") || `<div class="py-3 text-sm text-slate-500">Belum ada mapel.</div>`;
-
-    els.aSubject.innerHTML = state.subjects.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("");
-  }
-
-  async function addSubject(name) {
-    const clean = name.trim();
-    if (!clean) return;
-    const { error } = await state.sb.from("subjects").insert([{ name: clean }]);
-    if (error) throw error;
-  }
-
-  async function saveSubject(id) {
-    const input = document.querySelector(`[data-subject-name="${id}"]`);
-    const name = input?.value?.trim();
-    if (!name) return toast("Nama mapel kosong.", "warn");
-    const { error } = await state.sb.from("subjects").update({ name }).eq("id", id);
-    if (error) throw error;
-    toast("Mapel disimpan.", "ok");
-    await loadSubjects();
-  }
-
-  async function deleteSubject(id) {
-    const { error } = await state.sb.from("subjects").delete().eq("id", id);
-    if (error) throw error;
-  }
-
   async function loadUsers() {
     els.usersTbody.innerHTML = `<tr><td class="px-3 py-3 text-slate-500" colspan="4">Memuat…</td></tr>`;
-    // email column exists if you applied SQL patch; try with email first, fallback if not
     let data = null;
     let error = null;
     const r1 = await state.sb.from("profiles").select("id, full_name, role, email, created_at").order("created_at", { ascending: false }).limit(500);
@@ -871,7 +934,6 @@
     const newName = (nameEl?.value || "").trim();
 
     try {
-      // Requires SQL patch (RPC). Safer than allowing direct update policy.
       const r1 = await state.sb.rpc("admin_set_role", { target_user_id: uid, new_role: newRole });
       if (r1.error) throw r1.error;
 
@@ -905,26 +967,28 @@
     const saveSub = e.target.closest("[data-save-sub]");
     if (saveSub) return saveSubmission(saveSub.dataset.saveSub);
 
-    const saveSubjectBtn = e.target.closest("[data-save-subject]");
-    if (saveSubjectBtn) {
-      saveSubject(saveSubjectBtn.dataset.saveSubject).catch(err => toast(err.message, "err"));
-      return;
-    }
-
-    const delSubj = e.target.closest("[data-del-subject]");
-    if (delSubj) {
-      if (confirm("Hapus mapel ini?")) {
-        deleteSubject(delSubj.dataset.delSubject).then(() => renderSubjects()).catch(err => toast(err.message, "err"));
-      }
-      return;
-    }
-
     const uSave = e.target.closest("[data-u-save]");
     if (uSave) {
       adminSaveUser(uSave.dataset.uSave);
       return;
     }
   });
+
+  // Subjects table delegation
+  els.mapelTbody?.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+    const tr = btn.closest("tr[data-id]");
+    if (!tr) return;
+    const id = tr.getAttribute("data-id");
+    const action = btn.getAttribute("data-action");
+    if (action === "save") return saveSubjectRow(id, tr);
+    if (action === "delete") return deleteSubjectRow(id);
+  });
+
+  els.mapelAddBtn?.addEventListener("click", addSubjectTable);
+  els.mapelNewName?.addEventListener("keydown", (e) => { if (e.key === "Enter") addSubjectTable(); });
+  els.mapelRefreshBtn?.addEventListener("click", () => loadSubjectsAll());
 
   els.btnLogout.addEventListener("click", async () => {
     await state.sb.auth.signOut();
@@ -992,17 +1056,15 @@
     state.editing = a;
     els.mTitle.textContent = "Edit tugas";
     els.mSubtitle.textContent = "Perbarui judul, deadline, dll.";
-    // ensure subjects loaded
-    await loadSubjects();
+
+    await loadSubjectsAll();
 
     els.aTitle.value = a.title || "";
     els.aDesc.value = a.description || "";
     els.aType.value = a.type || "file_upload";
     els.aDeadline.value = toLocalInputValue(a.deadline);
-    // subject id
-    if (a.subject_id) {
-      els.aSubject.value = a.subject_id;
-    }
+    if (a.subject_id) els.aSubject.value = a.subject_id;
+
     closeModal(els.mDetail);
     openModal(els.mCreate);
   });
@@ -1018,21 +1080,6 @@
       toast("Tugas dihapus.", "ok");
     } catch (err) {
       toast(err.message || "Gagal hapus", "err");
-    }
-  });
-
-  els.btnLoadSubjects.addEventListener("click", () => renderSubjects().catch(err => toast(err.message, "err")));
-
-  els.formSubject.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    try {
-      const name = els.subjectName.value;
-      await addSubject(name);
-      els.subjectName.value = "";
-      await renderSubjects();
-      toast("Mapel ditambahkan.", "ok");
-    } catch (err) {
-      toast(err.message || "Gagal tambah mapel", "err");
     }
   });
 
@@ -1057,14 +1104,12 @@
     els.tabSubjects.classList.toggle("hidden", !isAdmin);
     els.tabUsers.classList.toggle("hidden", !isAdmin);
 
-    // Default tab
     setTab("tasks");
 
-    await loadSubjects();
+    await loadSubjectsAll();
     await loadAssignments();
 
     if (isAdmin) {
-      await renderSubjects();
       await loadUsers();
     }
 
